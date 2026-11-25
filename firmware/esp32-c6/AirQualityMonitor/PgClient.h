@@ -87,10 +87,17 @@ public:
     close();return false;
   }
   bool ingest(const String *values,const bool *nulls){
-    String p;z(p,"");z(p,"SELECT aqm.ingest($1::text,$2::text,$3::text,$4::text,$5::bigint,$6::bigint,$7::real,$8::real,$9::real,$10::real,$11::integer,$12::integer,$13::boolean,$14::smallint,$15::text,$16::text,$17::smallint)");u16(p,0);
+    return execute("SELECT aqm.ingest($1::text,$2::text,$3::text,$4::text,$5::bigint,$6::bigint,$7::real,$8::real,$9::real,$10::real,$11::integer,$12::integer,$13::boolean,$14::smallint,$15::text,$16::text,$17::smallint)",values,nulls,17);
+  }
+  bool calibration(const String *values,const bool *nulls){
+    return execute("SELECT aqm.record_calibration($1::text,$2::text,$3::bigint,$4::real,$5::real,$6::real,$7::real,$8::real)",values,nulls,8);
+  }
+private:
+  bool execute(const char *query,const String *values,const bool *nulls,uint16_t count){
+    String p;z(p,"");z(p,query);u16(p,0);
     if(!send('P',p)){close();return false;}
-    p="";z(p,"");z(p,"");u16(p,0);u16(p,17);
-    for(int i=0;i<17;i++){u32(p,nulls[i]?0xffffffff:values[i].length());if(!nulls[i])p+=values[i];}
+    p="";z(p,"");z(p,"");u16(p,0);u16(p,count);
+    for(int i=0;i<count;i++){u32(p,nulls[i]?0xffffffff:values[i].length());if(!nulls[i])p+=values[i];}
     u16(p,0);if(!send('B',p)){close();return false;}
     p="";z(p,"");u32(p,0);if(!send('E',p)||!send('S',"")){close();return false;}
     uint8_t b[4097];size_t n;char t;bool ok=false,err=false;uint32_t start=millis();
