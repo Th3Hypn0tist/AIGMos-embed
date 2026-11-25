@@ -6,7 +6,7 @@ Tarkoitus: jatkaminen toisessa ChatGPT-sessiossa. LUE TÄMÄ ENSIN.
 
 - Repo: https://github.com/Th3Hypn0tist/AirQualityMonitorSystem
 - Vanha nimi oli AirQualityMonitor-ESP32. Uusi nimi on tarkoituksella alustariippumaton.
-- **Tällä kirjauksella repo oli tyhjä**: toimivaa firmwarea, tietokantaskriptia tai backendia ei ole vielä commitoitu.
+- Ensimmäisten muistiinpanojen aikaan repo oli tyhjä. **2026-11-25 lisättiin talteen aiemmin tuotettu koodiluonnos**, ks. alempana. Koodin toimivuutta ei ole vielä varmistettu ESP32-C6 + TimescaleDB -kokoonpanossa.
 - Ensimmäinen testilaitteisto on **ESP32-C6 + CJMCU-8128**. Käyttäjällä on myös ESP8266-laitteita; samaan keruujärjestelmään tulee voida liittää useita erilaisia laitteita.
 - Mittaus- ja OLED-testit on tehty edellisessä keskustelussa. **OLED jätetään pois seuraavasta firmwareversiosta.** Paikallinen englanninkielinen web-dashboard säilytetään.
 - Tavoite: mittausdata palvelimelle **5 sekunnin välein**, PostgreSQL-kantaan, jossa hyödynnetään TimescaleDB:tä.
@@ -88,10 +88,22 @@ ESP-laitteeseen ei laiteta suoria PostgreSQL-tunnuksia. Aiemmin ehdotettiin PHP 
 2. Varmista PostgreSQL/TimescaleDB:n todellinen tila (preload, versio, tietokannan olemassaolo, CREATE EXTENSION).
 3. Lukitse ensimmäinen minimaalinen skeema: device_id, aikaleima, nykyiset mittaussarakkeet sekä tarpeelliset diagnostiikkakentät.
 4. Suunnittele ja toteuta PostgreSQL/TimescaleDB DDL + minimaalinen turvallinen ingest-rajapinta erillisinä tiedostoina. Päätä yhteinen JSON-sopimus, aikaleiman auktoriteetti, idempotenssi ja mitä tapahtuu verkkokatkossa.
-5. Siirrä **oikeasti testattu** ESP32-C6 sensorien lukukoodi uuden firmwareversion lähtökohdaksi, poista OLED kokonaan, säilytä dashboard ja lisää 5 s lähetys. Alkuperäinen toimiva .ino ei ole vielä repossa, joten se on haettava käyttäjältä / aiemmasta keskustelusta. Aiemmassa sessiossa tuotettiin kokeellinen AirQuality_PostgreSQL.zip, mutta sitä EI ole tässä vaiheessa vahvistettu eikä commitoitu.
+5. Vertaa talteen otettua firmwareluonnosta käyttäjän **oikeasti laitteessa ajossa olevaan** versioon. Repoon talletettu .ino on aiemmin generoitu OLEDiton ja 5 s ingest -versio, mutta sitä ei ole todettu käännetyksi tai laitteella toimivaksi. Aiempi OLED:llä testattu koodi ja myöhemmät käyttäjän käsin tekemät OLED-asettelumuutokset eivät ole varmuudella samassa tiedostossa. Säilytä toimiva mittaus- ja dashboard-logiikka, älä oleta ingestin toimivan.
 6. Testaa ensin tietokannan kirjoitus vastaanottorajapinnasta, sitten yksittäisen ESP32-C6:n päästä, lopuksi lisätään ESP8266.
 7. Säilytä käyttäjän päätös: uudet sensoriarvot → uusia sarakkeita hallitusti migraatiolla; ei EAV-mallia.
 
 ## Tietojen varmuus
 
 Tämä dokumentti kirjaa keskustelussa päätetyt asiat ja aiemmat testihavainnot. Se **ei** todista, että palvelin olisi jo asetettu valmiiksi tai että uusin keruuversio olisi käännetty ja testattu.
+
+## 2026-11-25: aiemmat lähdekoodit talteen (TÄRKEÄ)
+
+Käyttäjä pyysi myös nykyisen koodin tallentamista. Aiemmin samassa keskustelussa tuotettu **OLEDiton PostgreSQL-ingest-luonnos** on nyt commitattu erikseen:
+- `firmware/esp32-c6/AirQualityMonitor/AirQualityMonitor.ino` – aiemmin tuotettu 5 s HTTP-ingestillä varustettu Arduino-luonnos
+- `server/public/ingest.php` – PHP-vastaanotin
+- `server/private/config.example.php` – **vain esimerkkiasetukset**, ei salasanoja
+- `database/schema.sql` – **vanha tavallisen PostgreSQL:n** skeemaluonnos
+
+**Ei saa tulkita valmiiksi toteutukseksi!** Tallennus on lähdekoodin arkistointi tulevaa jatkoa varten. Merkittävä ero sovittuun uuteen arkkitehtuuriin: `config.example.php` käyttää tietokantanimeä `air_quality` (pitää vaihtaa `AirQualityMon`-nimeen, tarkistettava kirjainkoon käsittely); `schema.sql` käyttää tavallista taulua ja `id PRIMARY KEY` + `UNIQUE(device_id,boot_id,seq)` ilman ositusaikaa, mikä ei sellaisenaan käy TimescaleDB-hypertablen uniikkirajoitteiksi. Suunnittele DDL uudelleen ennen käyttöönottoa.
+
+ESP32-C6:n *viimeisin fyysisesti testattu* ohjelma käytti OLEDia, mutta sen koko täsmällistä lähdekoodia ei ole vielä palautettu tämän repon arkistoon. Pyydä laitteen ajossa oleva .ino tai etsi se aiemmasta sessiosta, jos tarvitsee verrata. **Älä korvaa toimivaa laiteversiota arkistoidulla, testaamattomalla keruuversiolla ilman testausta.**
