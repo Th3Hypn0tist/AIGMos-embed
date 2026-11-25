@@ -98,6 +98,15 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false,
         PDO::ATTR_TIMEOUT => 3,
     ]);
+    $pdo->beginTransaction();
+    $dedupe = $pdo->prepare('INSERT INTO aqm.ingest_keys (device_id, boot_id, seq)
+        VALUES (:device_id, :boot_id, :seq)
+        ON CONFLICT DO NOTHING');
+    $dedupe->execute([':device_id' => $device, ':boot_id' => $boot, ':seq' => $values[':seq']]);
+    if ($dedupe->rowCount() === 0) {
+        $pdo->commit();
+        reply(200, ['ok' => true, 'stored' => false]);
+    }
     $sql = 'INSERT INTO aqm.samples (
         device_id, boot_id, seq, uptime_ms,
         temperature_c, bmp_temperature_c, humidity_rh, pressure_hpa,
@@ -108,16 +117,13 @@ try {
         :temperature_c, :bmp_temperature_c, :humidity_rh, :pressure_hpa,
         :eco2_ppm, :tvoc_ppb, :ccs_warming_up, :ccs_error,
         :humidity_chip, :humidity_diag, :rssi_dbm
-    ) ON CONFLICT (device_id, boot_id, seq) DO NOTHING RETURNING id';
+    )';
     $stmt = $pdo->prepare($sql);
     $stmt->execute($values);
-    $id = $stmt->fetchColumn();
-    reply($id === false ? 200 : 201, [
-        'ok' => true,
-        'stored' => $id !== false,
-        'id' => $id === false ? null : (int)$id,
-    ]);
+    $pdo->commit();
+    reply(201, ['ok' => true, 'stored' => true]);
 } catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
     error_log('AirQuality ingest error: ' . $e->getMessage());
     reply(500, ['error' => 'Database write failed']);
 }
