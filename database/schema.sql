@@ -11,7 +11,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'aqm_ingest') THEN
     CREATE ROLE aqm_ingest LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
   END IF;
-END
+END;
 $$;
 
 CREATE TABLE IF NOT EXISTS aqm.nodes (
@@ -47,7 +47,6 @@ SELECT create_hypertable('aqm.samples', 'received_at',
     if_not_exists => TRUE, chunk_time_interval => INTERVAL '7 days');
 CREATE INDEX IF NOT EXISTS samples_node_time_idx ON aqm.samples (node_id, received_at DESC);
 
--- Separate ordinary table: unique keys independent of hypertable time partition.
 CREATE TABLE IF NOT EXISTS aqm.ingest_keys (
     node_id TEXT NOT NULL REFERENCES aqm.nodes(node_id),
     boot_id TEXT NOT NULL,
@@ -55,7 +54,6 @@ CREATE TABLE IF NOT EXISTS aqm.ingest_keys (
     PRIMARY KEY (node_id, boot_id, seq)
 );
 
--- Single atomic database operation; no direct table permissions for devices.
 CREATE OR REPLACE FUNCTION aqm.ingest(
     p_node TEXT, p_platform TEXT, p_version TEXT, p_boot TEXT,
     p_seq BIGINT, p_uptime BIGINT,
@@ -81,7 +79,7 @@ BEGIN
     VALUES (p_node, p_boot, p_seq, p_uptime, p_temp, p_bmp, p_rh, p_pressure,
       p_eco2, p_tvoc, p_warmup, p_error, p_chip, p_diag, p_rssi);
     RETURN TRUE;
-END
+END;
 $$;
 
 -- Independent manual observations of overall module surface temperature.
@@ -114,7 +112,7 @@ BEGIN
       raw_humidity_rh, thermal_camera_c, laser_meter_c)
     VALUES (p_node, p_boot, p_uptime, p_temp, p_bmp, p_rh, p_camera, p_laser);
     RETURN TRUE;
-END
+END;
 $$;
 REVOKE ALL ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL) TO aqm_ingest;
@@ -125,5 +123,3 @@ GRANT CONNECT ON DATABASE "AirQualityMon" TO aqm_ingest;
 GRANT USAGE ON SCHEMA aqm TO aqm_ingest;
 GRANT EXECUTE ON FUNCTION aqm.ingest(TEXT,TEXT,TEXT,TEXT,BIGINT,BIGINT,REAL,REAL,REAL,REAL,INTEGER,INTEGER,BOOLEAN,SMALLINT,TEXT,TEXT,SMALLINT) TO aqm_ingest;
 COMMIT;
--- Set a random ASCII password interactively using psql: \password aqm_ingest
--- No retention policy. No table read/write grants for nodes.
