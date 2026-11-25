@@ -84,31 +84,19 @@ BEGIN
 END
 $$;
 
--- Manual reference observations, independent of the continuous raw samples.
--- IR instruments measure surfaces; target identifies what was measured.
+-- Independent manual observations of overall module surface temperature.
 CREATE TABLE IF NOT EXISTS aqm.calibration_observations (
     observation_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     observed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     node_id TEXT NOT NULL REFERENCES aqm.nodes(node_id),
-    boot_id TEXT NOT NULL CHECK (boot_id ~ '^[0-9a-f]{16} IN SCHEMA aqm FROM PUBLIC, aqm_ingest;
-REVOKE ALL ON FUNCTION aqm.ingest(TEXT,TEXT,TEXT,TEXT,BIGINT,BIGINT,REAL,REAL,REAL,REAL,INTEGER,INTEGER,BOOLEAN,SMALLINT,TEXT,TEXT,SMALLINT) FROM PUBLIC;
-GRANT CONNECT ON DATABASE "AirQualityMon" TO aqm_ingest;
-GRANT USAGE ON SCHEMA aqm TO aqm_ingest;
-GRANT EXECUTE ON FUNCTION aqm.ingest(TEXT,TEXT,TEXT,TEXT,BIGINT,BIGINT,REAL,REAL,REAL,REAL,INTEGER,INTEGER,BOOLEAN,SMALLINT,TEXT,TEXT,SMALLINT) TO aqm_ingest;
-COMMIT;
--- Set a random ASCII password interactively using psql: \password aqm_ingest
--- No retention policy. No table read/write grants for nodes.
-),
+    boot_id TEXT NOT NULL CHECK (boot_id ~ '^[0-9a-f]{16}$'),
     uptime_ms BIGINT NOT NULL CHECK (uptime_ms >= 0),
     raw_temperature_c REAL,
     raw_bmp_temperature_c REAL,
     raw_humidity_rh REAL CHECK (raw_humidity_rh BETWEEN 0 AND 100),
     thermal_camera_c REAL CHECK (thermal_camera_c BETWEEN -100 AND 300),
     laser_meter_c REAL CHECK (laser_meter_c BETWEEN -100 AND 300),
-    ambient_reference_c REAL CHECK (ambient_reference_c BETWEEN -100 AND 150),
-    target TEXT NOT NULL CHECK (target IN ('reference_surface','humidity_sensor','bmp280','ccs811','pcb','other')),
-    note TEXT NOT NULL DEFAULT '' CHECK (length(note) <= 240),
-    CHECK (thermal_camera_c IS NOT NULL OR laser_meter_c IS NOT NULL OR ambient_reference_c IS NOT NULL)
+    CHECK (thermal_camera_c IS NOT NULL OR laser_meter_c IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS calibration_node_time_idx
     ON aqm.calibration_observations(node_id, observed_at DESC);
@@ -116,21 +104,20 @@ CREATE INDEX IF NOT EXISTS calibration_node_time_idx
 CREATE OR REPLACE FUNCTION aqm.record_calibration(
     p_node TEXT, p_boot TEXT, p_uptime BIGINT,
     p_temp REAL, p_bmp REAL, p_rh REAL,
-    p_camera REAL, p_laser REAL, p_reference REAL, p_target TEXT, p_note TEXT
+    p_camera REAL, p_laser REAL
 ) RETURNS BOOLEAN
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp
-AS $
+AS $$
 BEGIN
     INSERT INTO aqm.calibration_observations(
       node_id, boot_id, uptime_ms, raw_temperature_c, raw_bmp_temperature_c,
-      raw_humidity_rh, thermal_camera_c, laser_meter_c, ambient_reference_c, target, note)
-    VALUES (p_node, p_boot, p_uptime, p_temp, p_bmp, p_rh,
-      p_camera, p_laser, p_reference, p_target, p_note);
+      raw_humidity_rh, thermal_camera_c, laser_meter_c)
+    VALUES (p_node, p_boot, p_uptime, p_temp, p_bmp, p_rh, p_camera, p_laser);
     RETURN TRUE;
 END
-$;
-REVOKE ALL ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL,REAL,TEXT,TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL,REAL,TEXT,TEXT) TO aqm_ingest;
+$$;
+REVOKE ALL ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION aqm.record_calibration(TEXT,TEXT,BIGINT,REAL,REAL,REAL,REAL,REAL) TO aqm_ingest;
 
 REVOKE ALL ON ALL TABLES IN SCHEMA aqm FROM PUBLIC, aqm_ingest;
 REVOKE ALL ON FUNCTION aqm.ingest(TEXT,TEXT,TEXT,TEXT,BIGINT,BIGINT,REAL,REAL,REAL,REAL,INTEGER,INTEGER,BOOLEAN,SMALLINT,TEXT,TEXT,SMALLINT) FROM PUBLIC;
