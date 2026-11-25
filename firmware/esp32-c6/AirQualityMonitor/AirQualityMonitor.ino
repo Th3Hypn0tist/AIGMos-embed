@@ -2,14 +2,19 @@
  * Air quality monitor / ESP32-C6 / Arduino IDE
  * One-file firmware. Only Arduino-ESP32 bundled libraries are needed.
  * Sensors: CCS811, BMP280, HDC1080 OR Si7021 (autodetection).
- * PostgreSQL ingest via authenticated HTTP endpoint every 5 seconds.
+ * Native PostgreSQL SCRAM-SHA-256 ingest every 5 seconds.
  * HTTP: /  (dashboard), /api/sensors  (JSON)
  *
  * Hardware: CJMCU-8128 VCC=3.3V; CCS811 WAK=GND.
  */
 #include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
+#include <vector>
+#include <mbedtls/base64.h>
+#include <mbedtls/pkcs5.h>
+#include <mbedtls/version.h>
+#include <esp_mac.h>
+#include <esp_timer.h>
 #include <mbedtls/md.h>
 #include <esp_system.h>
 #include <WebServer.h>
@@ -35,12 +40,83 @@ constexpr uint32_t I2C_HZ = 100000;
 constexpr uint32_t SAMPLE_INTERVAL_MS = 2000;
 constexpr uint32_t INGEST_INTERVAL_MS = 5000;
 
-// Device -> HTTP/PHP ingestion endpoint -> PostgreSQL (NOT direct DB access).
-// Change both placeholders. Use the same secret in server/private/config.php.
-const char* INGEST_URL = "http://YOUR_SERVER_IP/ingest.php";
-const char* DEVICE_ID = "esp32c6-aqm-01";
-const char* INGEST_SECRET = "CHANGE_ME_TO_32_PLUS_RANDOM_CHARACTERS";
+// Set locally before flashing. Do not commit passwords.
+const char* PG_HOST = "YOUR_SERVER_IP";
+const char* PG_PASSWORD = "CHANGE_ME";
+const char* FW_VERSION = "1.0.0";
+char nodeId[13] = {};
+bool dbRegistered = false;
+bool dbLastOK = false;
 // -----------------------------------------------------------------------------
+
+// Native PostgreSQL v3, SCRAM-SHA-256, parameterized queries. Trusted LAN only.
+class PgClient {
+  using Bytes = std::vector<uint8_t>;
+  WiFiClient c;
+  uint8_t buf[4097];
+  static constexpr uint32_t TIMEOUT = 5000;
+  static void u32(Bytes &b,uint32_t v){for(int i=3;i>=0;--i)b.push_back(uint8_t(v>>(8*i)));}
+  static void u16(Bytes &b,uint16_t v){b.push_back(v>>8);b.push_back(v);}
+  static void z(Bytes &b,const char *s){while(*s)b.push_back(*s++);b.push_back(0);}
+  static void append(Bytes &b,const String &s){const uint8_t *p=(const uint8_t*)s.c_str();b.insert(b.end(),p,p+s.length());}
+  static uint32_t get32(const uint8_t *p){return (uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];}
+  bool writeAll(const uint8_t *p,size_t n){return n==0||c.write(p,n)==n;}
+  bool send(char t,const Bytes &b){uint8_t h[5];uint32_t n=b.size()+4;h[0]=t;for(int i=0;i<4;i++)h[i+1]=n>>(24-i*8);return writeAll(h,5)&&writeAll(b.data(),b.size());}
+  bool readAll(uint8_t *p,size_t n,uint32_t start){while(n){if(millis()-start>TIMEOUT)return false;int a=c.available();if(a>0){int k=c.read(p,n<(size_t)a?n:(size_t)a);if(k<=0)return false;p+=k;n-=k;}else{if(!c.connected())return false;delay(1);}}return true;}
+  bool frame(char &t,size_t &n,uint32_t start){uint8_t h[5];if(!readAll(h,5,start))return false;t=h[0];uint32_t l=get32(h+1);if(l<4||l-4>sizeof(buf)-1)return false;n=l-4;if(!readAll(buf,n,start))return false;buf[n]=0;return true;}
+  void error(size_t n){for(size_t i=0;i<n&&buf[i];){char k=buf[i++];size_t len=strlen((char*)buf+i);if(k=='M'||k=='C')Serial.printf("PG %c: %s\n",k,(char*)buf+i);i+=len+1;}}
+  static String b64(const uint8_t *p,size_t n){unsigned char b[256];size_t k=0;if(mbedtls_base64_encode(b,sizeof(b)-1,&k,p,n))return "";b[k]=0;return String((char*)b);}
+  static bool hmac(const uint8_t *key,size_t n,const String &s,uint8_t *out){return !mbedtls_md_hmac(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),key,n,(const uint8_t*)s.c_str(),s.length(),out);}
+  static String attr(const String &s,char k){int i=0;while(i<(int)s.length()){int e=s.indexOf(',',i);if(e<0)e=s.length();if(e-i>=2&&s[i]==k&&s[i+1]=='=')return s.substring(i+2,e);i=e+1;}return "";}
+  bool execute(const char *query,const String *v,const bool *nulls,uint16_t count){
+    Bytes p;z(p,"");z(p,query);u16(p,0);if(!send('P',p)){close();return false;}
+    p.clear();z(p,"");z(p,"");u16(p,0);u16(p,count);
+    for(uint16_t i=0;i<count;i++){u32(p,nulls[i]?0xffffffffUL:v[i].length());if(!nulls[i])append(p,v[i]);}
+    u16(p,0);if(!send('B',p)){close();return false;}
+    p.clear();z(p,"");u32(p,0);if(!send('E',p)||!send('S',Bytes{})){close();return false;}
+    char t;size_t n;bool ok=false,err=false;uint32_t start=millis();
+    while(frame(t,n,start)){if(t=='E'){err=true;error(n);}if(t=='C')ok=true;if(t=='Z'){if(!err&&ok&&n==1&&buf[0]=='I')return true;break;}}
+    close();return false;
+  }
+public:
+  void close(){c.stop();}
+  bool connected(){return c.connected();}
+  bool login(const char *host,uint16_t port,const char *db,const char *user,const char *password){
+    close();if(!c.connect(host,port,1500))return false;
+    c.setNoDelay(true);
+    Bytes s;u32(s,196608);z(s,"user");z(s,user);z(s,"database");z(s,db);z(s,"client_encoding");z(s,"UTF8");s.push_back(0);
+    Bytes h;u32(h,s.size()+4);if(!writeAll(h.data(),h.size())||!writeAll(s.data(),s.size())){close();return false;}
+    size_t n;char t;String nonce,bare,expected;bool auth=false,verified=false;int phase=0;uint32_t start=millis();
+    while(frame(t,n,start)){
+      if(t=='E'){error(n);break;}if(t=='Z'){if(auth&&verified&&n==1&&buf[0]=='I')return true;break;}if(t!='R')continue;
+      if(n<4)break;uint32_t code=get32(buf);
+      if(code==0&&phase==3){auth=true;continue;}
+      if(code==10&&phase==0){
+        bool found=false;for(size_t i=4;i<n&&buf[i];){size_t k=strlen((char*)buf+i);if(i+k>=n)break;if(!strcmp((char*)buf+i,"SCRAM-SHA-256"))found=true;i+=k+1;}if(!found)break;
+        uint8_t rnd[18];esp_fill_random(rnd,sizeof(rnd));nonce=b64(rnd,sizeof(rnd));if(nonce.isEmpty())break;
+        bare="n=,r="+nonce;String first="n,,"+bare;Bytes p;z(p,"SCRAM-SHA-256");u32(p,first.length());append(p,first);if(!send('p',p))break;phase=1;
+      }else if(code==11&&phase==1){
+        String sf((char*)buf+4),r=attr(sf,'r'),salt=attr(sf,'s'),iter=attr(sf,'i');if(!r.startsWith(nonce)||r.length()<=nonce.length()||salt.isEmpty()||attr(sf,'m').length())break;
+        if(iter.length()>6)break;for(size_t j=0;j<iter.length();j++)if(iter[j]<'0'||iter[j]>'9'){iter="";break;}long rounds=iter.toInt();if(rounds<4096||rounds>100000)break;
+        uint8_t sb[128],sp[32],ck[32],sk[32],sig[32],serverKey[32];size_t sl=0;if(mbedtls_base64_decode(sb,sizeof(sb),&sl,(const uint8_t*)salt.c_str(),salt.length())||!sl)break;
+        #if MBEDTLS_VERSION_NUMBER >= 0x03030000
+        int rc=mbedtls_pkcs5_pbkdf2_hmac_ext(MBEDTLS_MD_SHA256,(const uint8_t*)password,strlen(password),sb,sl,rounds,32,sp);
+        #else
+        mbedtls_md_context_t ctx;mbedtls_md_init(&ctx);int rc=mbedtls_md_setup(&ctx,mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),1);if(!rc)rc=mbedtls_pkcs5_pbkdf2_hmac(&ctx,(const uint8_t*)password,strlen(password),sb,sl,rounds,32,sp);mbedtls_md_free(&ctx);
+        #endif
+        if(rc)break;
+        String fin="c=biws,r="+r,am=bare+","+sf+","+fin;
+        if(!hmac(sp,32,"Client Key",ck)||mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),ck,32,sk)||!hmac(sk,32,am,sig)||!hmac(sp,32,"Server Key",serverKey)||!hmac(serverKey,32,am,sk))break;
+        expected=b64(sk,32);if(expected.isEmpty())break;for(int j=0;j<32;j++)ck[j]^=sig[j];Bytes p;append(p,fin+",p="+b64(ck,32));if(!send('p',p))break;phase=2;
+      }else if(code==12&&phase==2){if(attr(String((char*)buf+4),'v')!=expected)break;verified=true;phase=3;}
+      else break;
+    }
+    close();return false;
+  }
+  bool ingest(const String *v,const bool *n){return execute("SELECT aqm.ingest($1::text,$2::text,$3::text,$4::text,$5::bigint,$6::bigint,$7::real,$8::real,$9::real,$10::real,$11::integer,$12::integer,$13::boolean,$14::smallint,$15::text,$16::text,$17::smallint)",v,n,17);}
+  bool calibration(const String *v,const bool *n){return execute("SELECT aqm.record_calibration($1::text,$2::text,$3::bigint,$4::real,$5::real,$6::real,$7::real,$8::real)",v,n,8);}
+};
+PgClient pg;
 
 WebServer server(80);
 
@@ -411,6 +487,7 @@ h1{font-size:clamp(27px,4vw,41px);line-height:1.13;letter-spacing:-.04em;margin:
 footer{margin-top:26px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#7d91a9;font-size:12px}footer a{color:#95c8ff;text-decoration:none}
 @media(max-width:760px){.wrap{padding:25px 14px 40px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.card{padding:18px;border-radius:14px}.card.primary{grid-column:span 2;min-height:235px}.meta{grid-template-columns:1fr 1fr;gap:11px}header{flex-direction:column;margin-bottom:24px}}
 @media(max-width:440px){.grid{grid-template-columns:1fr}.card.primary{grid-column:span 1}.reading{font-size:41px}.meta{grid-template-columns:1fr 1fr}}
+.cal-fields{display:flex;gap:16px;flex-wrap:wrap;align-items:end}.cal-fields label{display:grid;gap:6px;color:var(--muted);font-size:13px}.cal-fields input{width:180px;max-width:100%;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font:inherit}.cal-fields button{padding:11px 18px;border:0;border-radius:7px;background:var(--green);color:var(--bg);font-weight:700;cursor:pointer}.cal-fields button:disabled{opacity:.5;cursor:wait}
 </style></head><body><main class="wrap">
 <header><div><p class="eyebrow">ESP32-C6 / ENVIRONMENT MONITOR</p><h1>Air quality <span class="accent">monitor</span></h1><p class="sub">Local monitoring · updates every 2 seconds</p></div>
 <div class="badge off" id="status"><span class="dot"></span><span id="status-text">Connecting...</span></div></header>
@@ -422,6 +499,10 @@ footer{margin-top:26px;display:flex;justify-content:space-between;flex-wrap:wrap
  <article class="card"><div class="label">Air pressure</div><div class="reading"><span id="pressure">—</span><span class="unit">hPa</span></div><p class="desc">BMP280 · local atmospheric pressure</p><svg class="spark" viewBox="0 0 300 45" preserveAspectRatio="none" id="plot-pressure"></svg></article>
  </section>
  <section class="meta"><div class="card"><div class="label">Wi-Fi</div><div class="v" id="wifi">—</div></div><div class="card"><div class="label">IP address</div><div class="v" id="ip">—</div></div><div class="card"><div class="label">Uptime</div><div class="v" id="uptime">—</div></div></section>
+ <h2 class="section">Calibration measurements</h2>
+ <section class="card"><p class="desc" id="cal-node">Node — · PostgreSQL —</p><p class="desc" id="cal-raw">Raw sensor temperatures —</p>
+ <p class="desc">Overall module surface temperature. Enter either or both readings. Original sensor data is preserved.</p>
+ <form id="cal-form" class="cal-fields" style="margin-top:16px"><label>Thermal camera (°C)<input id="camera" type="number" step="any" min="-100" max="300"></label><label>Laser thermometer (°C)<input id="laser" type="number" step="any" min="-100" max="300"></label><button id="cal-save" type="submit">Save measurement</button></form><p id="cal-result" class="desc" role="status"></p></section>
  <h2 class="section">Hardware status</h2><div class="sensors"><div class="chip" id="chip-ccs">CCS811 <b>…</b></div><div class="chip" id="chip-bmp">BMP280 <b>…</b></div><div class="chip" id="chip-hum">Humidity sensor <b>…</b></div></div>
  <footer><span id="updated">Waiting for measurements...</span><span>I²C: <span id="i2c">—</span> · <a href="/api/sensors">JSON API</a></span></footer>
  </main>
@@ -445,6 +526,9 @@ async function refresh(){
   const response=await fetch('/api/sensors',{cache:'no-store'});
   if(!response.ok)throw Error('HTTP '+response.status);
   const d=await response.json();
+  $('cal-node').textContent=`Node ${d.node_id} · PostgreSQL ${d.db_ok?'OK':'waiting / offline'}`;
+  const fmt=v=>Number.isFinite(v)?v.toFixed(2)+' °C':'—';
+  $('cal-raw').textContent=`Humidity sensor: ${fmt(d.raw_temperature)} · BMP280: ${fmt(d.bmp_temperature)}`;
   const st=$('status');st.classList.remove('off');$('status-text').textContent='LIVE · 2 s';
   show('temperature',d.temperature,1);show('humidity',d.humidity,1);
   show('pressure',d.pressure,1);show('eco2',d.eco2);show('tvoc',d.tvoc);
@@ -462,6 +546,13 @@ async function refresh(){
   $('updated').textContent=`Last update ${new Date().toLocaleTimeString('en-GB')} · values refresh automatically`;
  }catch(err){$('status').classList.add('off');$('status-text').textContent='Disconnected';$('updated').textContent='Server connection lost: '+err.message;}
 }
+$('cal-form').addEventListener('submit',async e=>{
+ e.preventDefault();const camera=$('camera').value,laser=$('laser').value;
+ if(!camera&&!laser){$('cal-result').textContent='Enter at least one reading.';return;}
+ $('cal-save').disabled=true;$('cal-result').textContent='Saving…';
+ try{const r=await fetch('/api/calibration',{method:'POST',headers:{'X-AQM-Calibration':'1'},body:new URLSearchParams({camera,laser})});$('cal-result').textContent=await r.text();if(r.ok){$('camera').value='';$('laser').value='';}}
+ catch(e){$('cal-result').textContent='Save not confirmed. Check before retrying.';}finally{$('cal-save').disabled=false;}
+});
 refresh();setInterval(refresh,2000);
 </script></body></html>
 )DASHBOARD";
@@ -475,96 +566,57 @@ String jsonInt(int n, bool available = true) {
 }
 
 
-// ---- Signed HTTP ingest: server timestamps received samples in PostgreSQL ----
-// HMAC protects message integrity even on isolated HTTP LANs; use HTTPS
-// (certificate validated) if the IOT network is not fully trusted.
+// Raw samples and manual calibration observations use separate DB functions.
 String humidityChipName() {
   if (humidityChip == HUM_HDC1080) return "HDC1080";
   if (humidityChip == HUM_SI7021) return "Si7021";
   return "unknown";
 }
-
-bool hmacSha256Hex(const String& message, char out[65]) {
-  const mbedtls_md_info_t* md = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-  if (!md) return false;
-  uint8_t hash[32];
-  const int ok = mbedtls_md_hmac(
-    md,
-    (const unsigned char*)INGEST_SECRET, strlen(INGEST_SECRET),
-    (const unsigned char*)message.c_str(), message.length(), hash
-  );
-  if (ok != 0) return false;
-  static const char hex[] = "0123456789abcdef";
-  for (int i = 0; i < 32; ++i) {
-    out[2 * i] = hex[hash[i] >> 4];
-    out[2 * i + 1] = hex[hash[i] & 0x0F];
-  }
-  out[64] = 0;
-  return true;
+String uptimeMs() {
+  char b[24];snprintf(b,sizeof(b),"%llu",(unsigned long long)(esp_timer_get_time()/1000));return String(b);
 }
-
-String buildIngestPayload(uint32_t sequence) {
-  const uint32_t now = millis();
-  const bool climateFresh = lastClimateAt && (uint32_t)(now - lastClimateAt) < 10000;
-  const bool bmpFresh = lastBmpAt && (uint32_t)(now - lastBmpAt) < 10000;
-  const bool gasFresh = lastGasAt && (uint32_t)(now - lastGasAt) < 10000;
-  const float temp = climateFresh ? ambientTemp : (bmpFresh ? bmpTemp : NAN);
-
-  String out;
-  out.reserve(400);
-  out += "{\"device_id\":\"" + String(DEVICE_ID) + "\"";
-  out += ",\"boot_id\":\"" + String(bootId) + "\"";
-  out += ",\"seq\":" + String(sequence);
-  out += ",\"uptime_ms\":" + String(now);
-  out += ",\"temperature_c\":" + jsonFloat(temp, 2);
-  out += ",\"bmp_temperature_c\":" + jsonFloat(bmpTemp, 2, bmpFresh);
-  out += ",\"humidity_rh\":" + jsonFloat(humidityRH, 2, climateFresh);
-  out += ",\"pressure_hpa\":" + jsonFloat(pressureHPa, 2, bmpFresh);
-  out += ",\"eco2_ppm\":" + jsonInt(eco2, gasFresh);
-  out += ",\"tvoc_ppb\":" + jsonInt(tvoc, gasFresh);
-  out += ",\"ccs_warming_up\":" + String(ccsReady && (uint32_t)(now - ccsStartedAt) < 1200000 ? "true" : "false");
-  out += ",\"ccs_error\":" + String(ccsError);
-  out += ",\"humidity_chip\":\"" + humidityChipName() + "\"";
-  out += ",\"humidity_diag\":\"" + String(humidityDiagnostic) + "\"";
-  out += ",\"rssi_dbm\":" + String(WiFi.RSSI());
-  out += "}";
-  return out;
+void rawFloat(String &v,bool &n,float x,bool valid) { n=!valid||!isfinite(x);v=n?String(""):String(x,6); }
+void rawInt(String &v,bool &n,int x,bool valid) { n=!valid||x<0;v=n?String(""):String(x); }
+bool dbConnect() {
+  if(WiFi.status()!=WL_CONNECTED){pg.close();return false;}
+  if(!nodeId[0]||!strcmp(PG_HOST,"YOUR_SERVER_IP")||!strcmp(PG_PASSWORD,"CHANGE_ME"))return false;
+  if(pg.connected())return true;
+  Serial.println("PG connecting...");
+  bool ok=pg.login(PG_HOST,5432,"AirQualityMon","aqm_ingest",PG_PASSWORD);
+  Serial.println(ok?"PG connected":"PG connection failed");return ok;
 }
-
 void sendIngest() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  if (strstr(INGEST_URL, "YOUR_SERVER_IP") ||
-      strcmp(INGEST_SECRET, "CHANGE_ME_TO_32_PLUS_RANDOM_CHARACTERS") == 0) {
-    static bool warned = false;
-    if (!warned) Serial.println("Ingest disabled: set INGEST_URL and INGEST_SECRET");
-    warned = true;
-    return;
-  }
-
-  const String payload = buildIngestPayload(sampleSequence++);
-  char signature[65];
-  if (!hmacSha256Hex(payload, signature)) {
-    Serial.println("Ingest: HMAC-SHA256 failure");
-    return;
-  }
-
-  WiFiClient client;
-  HTTPClient http;
-  http.setConnectTimeout(1500);
-  http.setTimeout(2500);
-  if (!http.begin(client, INGEST_URL)) {
-    Serial.println("Ingest: invalid URL / connection initialization failed");
-    return;
-  }
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("X-AQM-Signature", signature);
-  const int status = http.POST(payload);
-  if (status == 200 || status == 201) {
-    Serial.printf("Ingest OK: HTTP %d, seq=%lu\n", status, (unsigned long)(sampleSequence - 1));
-  } else {
-    Serial.printf("Ingest FAILED: HTTP %d, seq=%lu\n", status, (unsigned long)(sampleSequence - 1));
-  }
-  http.end();
+  const uint32_t now=millis();
+  const bool climate=lastClimateAt&&now-lastClimateAt<10000;
+  const bool bmp=lastBmpAt&&now-lastBmpAt<10000;
+  const bool gas=lastGasAt&&now-lastGasAt<10000;
+  String v[17];bool n[17]={};
+  v[0]=nodeId;v[1]="ESP32-C6";v[2]=FW_VERSION;v[3]=bootId;v[4]=String(sampleSequence++);v[5]=uptimeMs();
+  rawFloat(v[6],n[6],ambientTemp,climate);rawFloat(v[7],n[7],bmpTemp,bmp);
+  rawFloat(v[8],n[8],humidityRH,climate);rawFloat(v[9],n[9],pressureHPa,bmp);
+  rawInt(v[10],n[10],eco2,gas);rawInt(v[11],n[11],tvoc,gas);
+  v[12]=ccsReady&&now-ccsStartedAt<1200000?"true":"false";v[13]=String(ccsError);
+  v[14]=humidityChipName();v[15]=humidityDiagnostic;v[16]=String(WiFi.RSSI());
+  dbLastOK=dbConnect()&&pg.ingest(v,n);
+  if(dbLastOK)dbRegistered=true;
+  Serial.printf("PG ingest %s: node=%s seq=%s\n",dbLastOK?"OK":"FAILED",nodeId,v[4].c_str());
+}
+bool parseReference(const char *key,String &value,bool &missing){
+  String s=server.arg(key);s.trim();s.replace(',','.');missing=s.isEmpty();if(missing)return true;
+  if(s.length()>24)return false;char *end=nullptr;float x=strtof(s.c_str(),&end);
+  if(end==s.c_str()||*end||!isfinite(x)||x< -100||x>300)return false;
+  value=String(x,6);return true;
+}
+void handleCalibration(){
+  // Only same-origin JavaScript requests; dashboard is intended for the trusted LAN.
+  if(server.header("X-AQM-Calibration")!="1"){server.send(403,"text/plain","Forbidden");return;}
+  String v[8];bool n[8]={};
+  if(!parseReference("camera",v[6],n[6])||!parseReference("laser",v[7],n[7])||(n[6]&&n[7])){server.send(400,"text/plain","Enter at least one valid temperature (-100 to 300 C).");return;}
+  if(!dbRegistered){server.send(503,"text/plain","Wait for first successful database sample.");return;}
+  const uint32_t now=millis();const bool climate=lastClimateAt&&now-lastClimateAt<10000;const bool bmp=lastBmpAt&&now-lastBmpAt<10000;
+  v[0]=nodeId;v[1]=bootId;v[2]=uptimeMs();rawFloat(v[3],n[3],ambientTemp,climate);rawFloat(v[4],n[4],bmpTemp,bmp);rawFloat(v[5],n[5],humidityRH,climate);
+  if(!dbConnect()||!pg.calibration(v,n)){dbLastOK=false;server.send(503,"text/plain","Database did not confirm the save. Check before retrying.");return;}
+  dbLastOK=true;server.send(200,"text/plain","Measurement saved.");
 }
 
 void handleAPI() {
@@ -582,6 +634,9 @@ void handleAPI() {
   String out;
   out.reserve(480);
   out += "{\"temperature\":" + jsonFloat(temp, 2);
+  out += ",\"node_id\":\"" + String(nodeId) + "\"";
+  out += ",\"db_ok\":" + String(dbLastOK ? "true" : "false");
+  out += ",\"raw_temperature\":" + jsonFloat(ambientTemp, 2, climateFresh);
   out += ",\"humidity\":" + jsonFloat(humidityRH, 2, climateFresh);
   out += ",\"humidity_diag\":\"" + String(humidityDiagnostic) + "\"";
   out += ",\"pressure\":" + jsonFloat(pressureHPa, 2, bmpFresh);
@@ -623,7 +678,11 @@ void setup() {
   Serial.println("\nAir quality monitor / ESP32-C6 / PostgreSQL ingest");
   snprintf(bootId, sizeof(bootId), "%08lx%08lx",
            (unsigned long)esp_random(), (unsigned long)esp_random());
-  Serial.printf("Device: %s | boot: %s\n", DEVICE_ID, bootId);
+  uint8_t mac[6];
+  if(esp_efuse_mac_get_default(mac)==ESP_OK){
+    snprintf(nodeId,sizeof(nodeId),"%02x%02x%02x%02x%02x%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+  } else Serial.println("ERROR: Factory MAC unavailable; DB disabled");
+  Serial.printf("Node: %s | boot: %s\n", nodeId, bootId);
 
   Wire.begin(SDA_PIN, SCL_PIN, I2C_HZ);
   scanI2C();
@@ -664,7 +723,10 @@ void setup() {
     server.sendHeader("Cache-Control", "no-store");
     server.send_P(200, "text/html; charset=utf-8", DASHBOARD);
   });
+  const char* headers[] = {"X-AQM-Calibration"};
+  server.collectHeaders(headers,1);
   server.on("/api/sensors", HTTP_GET, handleAPI);
+  server.on("/api/calibration", HTTP_POST, handleCalibration);
   server.onNotFound([]() { server.send(404, "text/plain", "404 Not found"); });
   server.begin();
   Serial.println("WebServer listening on port 80");
