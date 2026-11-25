@@ -107,3 +107,14 @@ Käyttäjä pyysi myös nykyisen koodin tallentamista. Aiemmin samassa keskustel
 **Ei saa tulkita valmiiksi toteutukseksi!** Tallennus on lähdekoodin arkistointi tulevaa jatkoa varten. Merkittävä ero sovittuun uuteen arkkitehtuuriin: `config.example.php` käyttää tietokantanimeä `air_quality` (pitää vaihtaa `AirQualityMon`-nimeen, tarkistettava kirjainkoon käsittely); `schema.sql` käyttää tavallista taulua ja `id PRIMARY KEY` + `UNIQUE(device_id,boot_id,seq)` ilman ositusaikaa, mikä ei sellaisenaan käy TimescaleDB-hypertablen uniikkirajoitteiksi. Suunnittele DDL uudelleen ennen käyttöönottoa.
 
 ESP32-C6:n *viimeisin fyysisesti testattu* ohjelma käytti OLEDia, mutta sen koko täsmällistä lähdekoodia ei ole vielä palautettu tämän repon arkistoon. Pyydä laitteen ajossa oleva .ino tai etsi se aiemmasta sessiosta, jos tarvitsee verrata. **Älä korvaa toimivaa laiteversiota arkistoidulla, testaamattomalla keruuversiolla ilman testausta.**
+
+## 2026-11-25: OLED- ja LCD2004A-versiot arkistoitu
+
+Käyttäjä pyysi säilyttämään molemmat näyttöhaarat mahdollista tulevaa käyttöä varten. Aiempien keskustelujen ZIP-arkistoista palautettiin ja commitattiin **alkuperäiset .ino-lähdetiedostot sekä kunkin version README.txt**, ilman koodimuutoksia:
+
+- `firmware/esp32-c6/legacy-displays/CJMCU8128_Web_LCD_v4/` – 2004A I²C LCD
+- `firmware/esp32-c6/legacy-displays/CJMCU8128_Web_LCD_v5/` – 2004A LCD + diagnostiikka
+- `firmware/esp32-c6/legacy-displays/CJMCU8128_Web_OLED_v6/` – OLED 128×64
+- `firmware/esp32-c6/legacy-displays/CJMCU8128_Web_OLED_v7/` – OLED-korjausversio
+
+**Käytä näitä arkistoina / palautuspisteinä, älä nykyisen kehityksen aktiivisina firmwareversioina.** Nämä ovat ZIP-versioiden snapshotit; viimeisessä keskustelussa käsin muokattu `refreshOLED()`-asettelu (IP pois, Y=2/24/40/56) ei välttämättä sisälly v7 ZIPiin. OLED:n fyysinen rivivika ja 2004A:n heikko kontrasti 3,3 V:lla säilyvät huomioina. Älä poista näitä versioita jatkokehityksessä. OLEDiton ingest-haara sijaitsee erillään `firmware/esp32-c6/AirQualityMonitor/`-hakemistossa.
