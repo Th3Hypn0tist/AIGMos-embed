@@ -2,6 +2,8 @@
 
 Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on ensimmäinen referenssisovellus. Tämä on työlista, ei toteutuneen protokollan dokumentaatio.
 
+Priorisoitu jäljellä oleva toteutusjärjestys: [EMBEDDED_REMAINING.md](EMBEDDED_REMAINING.md). Päivitä molemmat listat toteutuscommitien yhteydessä.
+
 ## 1. Arkkitehtuuri ja rakennemäärittely
 - [x] AIGMos Embedded -repository (`AIGMos-embed`).
 - [ ] Koneellisesti luettava SSOT ja AIGMos-yhteensopivat rakenteet. (Alustava `embedded/structure.json`.)
