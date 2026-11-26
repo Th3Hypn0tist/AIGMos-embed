@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "address": "/aqm/sample",
+  "fields": [
+    [
+      "node_id",
+      "s",
+      "text"
+    ],
+    [
+      "platform",
+      "s",
+      "text"
+    ],
+    [
+      "firmware_version",
+      "s",
+      "text"
+    ],
+    [
+      "boot_id",
+      "s",
+      "text"
+    ],
+    [
+      "seq",
+      "h",
+      "bigint"
+    ],
+    [
+      "uptime_ms",
+      "h",
+      "bigint"
+    ],
+    [
+      "temperature_c",
+      "f",
+      "real",
+      true
+    ],
+    [
+      "bmp_temperature_c",
+      "f",
+      "real",
+      true
+    ],
+    [
+      "humidity_rh",
+      "f",
+      "real",
+      true
+    ],
+    [
+      "pressure_hpa",
+      "f",
+      "real",
+      true
+    ],
+    [
+      "eco2_ppm",
+      "i",
+      "integer",
+      true
+    ],
+    [
+      "tvoc_ppb",
+      "i",
+      "integer",
+      true
+    ],
+    [
+      "ccs_warming_up",
+      "bool",
+      "boolean"
+    ],
+    [
+      "ccs_error",
+      "i",
+      "smallint"
+    ],
+    [
+      "humidity_chip",
+      "s",
+      "text"
+    ],
+    [
+      "humidity_diag",
+      "s",
+      "text"
+    ],
+    [
+      "rssi_dbm",
+      "i",
+      "smallint",
+      true
+    ]
+  ],
+  "platforms": {
+    "ESP8266": {
+      "fqbn": "esp8266:esp8266:d1_mini",
+      "sda": 4,
+      "scl": 5,
+      "dht": 14
+    },
+    "ESP32-C6": {
+      "fqbn": "esp32:esp32:esp32c6",
+      "sda": 4,
+      "scl": 5,
+      "dht": 14
+    }
+  },
+  "modules": {
+    "BMP180": {
+      "interface": "i2c",
+      "addresses": [
+        119
+      ],
+      "register": 208,
+      "id": 85
+    },
+    "BMP280": {
+      "interface": "i2c",
+      "addresses": [
+        118,
+        119
+      ],
+      "register": 208,
+      "id": 88
+    },
+    "DHT11": {
+      "interface": "gpio"
+    },
+    "HDC1080": {
+      "interface": "i2c",
+      "addresses": [
+        64
+      ]
+    },
+    "Si7021": {
+      "interface": "i2c",
+      "addresses": [
+        64
+      ]
+    },
+    "CCS811": {
+      "interface": "i2c",
+      "addresses": [
+        90,
+        91
+      ],
+      "register": 32,
+      "id": 129
+    }
+  }
+}
