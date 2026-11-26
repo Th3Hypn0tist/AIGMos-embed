@@ -3,16 +3,16 @@
 Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on ensimmäinen referenssisovellus. Tämä on työlista, ei toteutuneen protokollan dokumentaatio.
 
 ## 1. Arkkitehtuuri ja rakennemäärittely
-- [ ] AIGMos Embedded -repository.
-- [ ] Koneellisesti luettava SSOT ja AIGMos-yhteensopivat rakenteet.
-- [ ] Natiivin C/C++-toteutuksen rajaus.
+- [x] AIGMos Embedded -repository (`AIGMos-embed`).
+- [ ] Koneellisesti luettava SSOT ja AIGMos-yhteensopivat rakenteet. (Alustava `embedded/structure.json`.)
+- [x] Natiivin C/C++-toteutuksen rajaus (C99 baseline, C++ adapter ABI).
 - [ ] HardCore-, Core-, Adapter- ja UserModule-erottelu.
 - [ ] Build-kohtainen ominaisuuksien karsinta.
 - [ ] Nollariippuvuuden automaattinen validointi.
 - [ ] Alustariippumattomuuden validointi.
 
 ## 2. HardCore
-- [ ] State ja #I-namespace.
+- [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo ja namespace-validointi avoinna.)
 - [ ] Command Surface ja Command Registry.
 - [ ] Trigger, Event, Runner ja TER-suoritusketju.
 - [ ] Rutiinien suoritus.

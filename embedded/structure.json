@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "language": "C99",
+  "runtime": {
+    "hardcore": {
+      "path": "embedded/hardcore",
+      "dependencies": [],
+      "features": [
+        "state",
+        "cs",
+        "ter"
+      ]
+    },
+    "core": {
+      "path": "embedded/core",
+      "dependencies": []
+    }
+  },
+  "external": {
+    "platform_adapters": "embedded/adapters",
+    "user_modules": "embedded/modules",
+    "node_manager": "node_manager",
+    "applications": "applications"
+  },
+  "input": {
+    "namespace": "#I",
+    "route": [
+      "input_module",
+      "state",
+      "trigger",
+      "event",
+      "runner",
+      "command"
+    ]
+  },
+  "output": {
+    "route": [
+      "command",
+      "output_module"
+    ]
+  },
+  "build": {
+    "framework": null,
+    "allocation": "caller_owned",
+    "features": "compile_time"
+  }
+}
