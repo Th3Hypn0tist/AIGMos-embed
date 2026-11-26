@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.12."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.13."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.12'
+VERSION = '1.0.13'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -100,8 +100,12 @@ def offset_seconds(value):
 def history(window, nodes, offset='00:00:00:00'):
     seconds, bucket = range_params(window)
     now = utcnow()
-    end = now - timedelta(seconds=offset_seconds(offset))
-    start = end - timedelta(seconds=seconds)
+    # Nonzero offset anchors the beginning of the window relative to now.
+    # Zero retains live mode: show the latest full timeframe.
+    age = offset_seconds(offset)
+    start = now - timedelta(seconds=age or seconds)
+    end = min(now, start + timedelta(seconds=seconds))
+    bucket = next(b for limit, b in RANGES.values() if (end - start).total_seconds() <= limit)
     where = 'received_at >= %s AND received_at <= %s'
     cal_where = 'observed_at >= %s AND observed_at <= %s'
     params = [start, end]
@@ -167,12 +171,12 @@ HTML = r'''<!doctype html>
 </style></head><body><main><div class="dashboard">
 <header><h1>Air quality monitor</h1><div id="db" class="badge" role="status">Connecting…</div></header>
 <div id="error" role="status"></div>
-<div class="section"><div class="controls"><span id="offset-label">Start offset (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="offset-label"><input id="offset-days" aria-label="Start offset days" type="number" min="0" max="90" step="1" value="00" required>:<input id="offset-hours" aria-label="Start offset hours" type="number" min="0" max="23" step="1" value="00" required>:<input id="offset-minutes" aria-label="Start offset minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="offset-seconds" aria-label="Start offset seconds" type="number" min="0" max="59" step="1" value="00" required></span></div><div class="controls"><span id="duration-label">Timeframe (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="duration-label"><input id="range-days" aria-label="Days" type="number" min="0" max="90" step="1" value="00" required>:<input id="range-hours" aria-label="Hours" type="number" min="0" max="23" step="1" value="01" required>:<input id="range-minutes" aria-label="Minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="range-seconds" aria-label="Seconds" type="number" min="0" max="59" step="1" value="00" required></span></div></div>
+<div class="section"><div class="controls"><span id="offset-label">Start offset from now (0 = live)</span><span class="duration" role="group" aria-labelledby="offset-label"><input id="offset-days" aria-label="Start offset days" type="number" min="0" max="90" step="1" value="00" required>:<input id="offset-hours" aria-label="Start offset hours" type="number" min="0" max="23" step="1" value="00" required>:<input id="offset-minutes" aria-label="Start offset minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="offset-seconds" aria-label="Start offset seconds" type="number" min="0" max="59" step="1" value="00" required></span></div><div class="controls"><span id="duration-label">Timeframe (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="duration-label"><input id="range-days" aria-label="Days" type="number" min="0" max="90" step="1" value="00" required>:<input id="range-hours" aria-label="Hours" type="number" min="0" max="23" step="1" value="01" required>:<input id="range-minutes" aria-label="Minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="range-seconds" aria-label="Seconds" type="number" min="0" max="59" step="1" value="00" required></span></div></div>
 <section id="charts" class="charts" role="group" aria-label="Select chart"></section>
 <section id="focus-chart" class="card chart focus-chart" aria-label="Selected chart"><div id="chart-time-range" class="chart-time-range"></div></section>
 <div id="selector" class="selector" role="group" aria-label="Select nodes"></div>
 </div>
-<footer>AirQualityMonitorSystem v1.0.12 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<footer>AirQualityMonitorSystem v1.0.13 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -235,6 +239,11 @@ const durationInputs=['days','hours','minutes','seconds'].map(k=>$('range-'+k));
 function durationSeconds(key){
  const [d,h,m,s]=key.split(':').map(Number);
  return d*86400+h*3600+m*60+s;
+}
+function windowBounds(now,range,offset){
+ const duration=durationSeconds(range)*1000,age=durationSeconds(offset)*1000;
+ const start=now-(age||duration);
+ return [start,Math.min(now,start+duration)];
 }
 function resetDuration(){
  windowKey.split(':').forEach((v,i)=>{durationInputs[i].value=v});
@@ -318,7 +327,7 @@ function draw(c){const {canvas,spec,legend}=c;const w=canvas.clientWidth,h=canva
 function nearest(points,t){let a=0,b=points.length;while(a<b){const m=(a+b)>>1;if(points[m][0]<t)a=m+1;else b=m}const p=points[a],q=points[a-1];return !q?p:!p?q:Math.abs(p[0]-t)<Math.abs(q[0]-t)?p:q}
 function hover(c,e){if(!c.layout){c.tip.hidden=true;return}const {start,end,left,right,lines}=c.layout;const r=c.canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<left||x>right){c.tip.hidden=true;return}const t=start+(x-left)/(right-left)*(end-start);const tolerance=Math.max((end-start)/(right-left)*8,(hist.bucket_seconds||5)*1000);const vals=[];for(const l of lines){const p=nearest(l.points,t);if(p&&finite(p[1])&&Math.abs(p[0]-t)<=tolerance)vals.push(`${l.label}: ${fmt(p[1],2)} ${c.spec.unit} (${tickTime(p[0],end-start)})`)}if(!vals.length){c.tip.hidden=true;return}c.tip.textContent=local(t)+'\n'+vals.join('\n');c.tip.hidden=false;const cr=c.card.getBoundingClientRect();c.tip.style.left=Math.max(8,Math.min(e.clientX-cr.left+10,c.card.clientWidth-c.tip.offsetWidth-8))+'px';c.tip.style.top=Math.max(8,e.clientY-cr.top-c.tip.offsetHeight-10)+'px'}
 function renderHistory(){$('chart-time-range').textContent=local(hist.start)+' — '+local(hist.end);for(const c of charts)draw(c)}
-async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now()-durationSeconds(offsetKey)*1000,dur=durationSeconds(windowKey);hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();setError('history','');return}const q=new URLSearchParams({range:windowKey,offset:offsetKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message)}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
+async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const [start,end]=windowBounds(Date.now(),windowKey,offsetKey);hist={start:new Date(start).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();setError('history','');return}const q=new URLSearchParams({range:windowKey,offset:offsetKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message)}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
 refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,5000);setInterval(requestHistory,15000);
 </script></body></html>'''
 
