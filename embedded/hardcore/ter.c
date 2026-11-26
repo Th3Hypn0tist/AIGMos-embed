@@ -18,7 +18,7 @@ int aig_ter_step(aig_ter *t,size_t *executed) {
     if (!t || !executed || !t->cs || t->running || (t->event_count && (!t->events || !t->routes))) return -1;
     *executed=0;
     t->running=1;
-    /* One bounded pass. Commands may raise events for a subsequent pass. */
+    /* One bounded pass. Newly raised events at later indices may run now; earlier indices wait for the next pass. */
     for (i=0;i<t->event_count;++i) {
         const aig_event_route *route=&t->routes[i];
         if (!t->events[i].pending) continue;

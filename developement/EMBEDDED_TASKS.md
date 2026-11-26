@@ -8,16 +8,16 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 - [x] Natiivin C/C++-toteutuksen rajaus (C99 baseline, C++ adapter ABI).
 - [ ] HardCore-, Core-, Adapter- ja UserModule-erottelu.
 - [ ] Build-kohtainen ominaisuuksien karsinta.
-- [ ] Nollariippuvuuden automaattinen validointi.
+- [ ] Nollariippuvuuden automaattinen validointi. (Include-rajojen tarkistin lisätty; ajo ja linkitysauditointi avoinna.)
 - [ ] Alustariippumattomuuden validointi.
 
 ## 2. HardCore
-- [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo ja namespace-validointi avoinna.)
+- [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo avoinna; #I-kirjoitusrajapinta lisätty.)
 - [ ] Command Surface ja Command Registry. (Natiivin rekisterin ja dispatchin ensimmäinen toteutus lisätty; host-testi ja AC avoinna.)
 - [ ] Trigger, Event, Runner ja TER-suoritusketju. (Ensimmäinen toteutus ja integraatiotesti lisätty; testiajo ja semantiikan validointi avoinna.)
 - [ ] Rutiinien suoritus. (Nimetyt &-rutiinit, järjestetty suoritus, virhekatkaisu ja rekursiosuoja lisätty; host-testi ajamatta.)
 - [ ] AccessCore-tuen valinnainen sisällyttäminen. (AIGMOS_ACCESSCORE-build flag ja fail-closed CS-valtuutusrajapinta lisätty; ei vielä varsinaista AccessCore-integraatiota; testi ajamatta.)
-- [ ] Muistinkäytön minimointi ja suorituskykytestit.
+- [ ] Muistinkäytön minimointi ja suorituskykytestit. (Host sizeof -profilointityökalu lisätty; ajo ja kohdealustamittaukset avoinna.)
 
 ```text
 Sensor
@@ -99,7 +99,7 @@ Module Registry
 - [ ] Input-, Output-, Communication- ja UserModule-valinnat.
 - [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen.
 - [ ] Pin bindings -generointi.
-- [ ] Riippuvuuksien resolvointi ja komposition validointi.
+- [ ] Riippuvuuksien resolvointi ja komposition validointi. (Natiivien State/CS/TER-taulujen validointi lisätty; host-testi ajamatta.)
 - [ ] Firmware-lähdekoodin generointi.
 - [ ] Build manifest ja komposition versionointi.
 

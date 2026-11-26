@@ -9,12 +9,16 @@
         "state",
         "cs",
         "ter",
-        "routine"
+        "routine",
+        "input"
       ]
     },
     "core": {
       "path": "embedded/core",
-      "dependencies": []
+      "dependencies": [],
+      "features": [
+        "validate"
+      ]
     }
   },
   "external": {
