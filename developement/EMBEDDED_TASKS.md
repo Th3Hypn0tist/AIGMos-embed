@@ -66,13 +66,13 @@ Module Registry
 
 ## 5. Node Manager
 - [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus.
-- [ ] MAC-pohjainen node ID ja pysyvä node registry.
+- [ ] MAC-pohjainen node ID ja pysyvä node registry. (Atominen paikallinen JSON-rekisteri lisätty; testiajo avoinna.)
 - [ ] Alustakohtaisen probe-firmwaren muodostaminen.
 - [ ] Probe-firmwaren flashaus eksplisiittisellä Detect hardware -käskyllä.
 - [ ] I²C-sensoritunnistus ja GPIO-tunnistus sallituilla pinneillä.
 - [ ] Hardware inventory.
 - [ ] Moduulien manuaalinen lisääminen, poistaminen ja vaihtaminen.
-- [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen.
+- [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen. (SHA-256-versiot ja palautus lisätty; testiajo avoinna.)
 
 ## 6. Pin Mapper
 - [ ] Piirilevykohtainen visuaalinen pinout.
@@ -87,21 +87,21 @@ Module Registry
 ## 7. Network Manager
 - [ ] OSC-nodejen ja legacy PostgreSQL -nodejen tunnistus.
 - [ ] USB- ja verkkoinventaarion yhdistäminen.
-- [ ] MAC-pohjainen IP-rekisteri.
-- [ ] Automaattinen IP-allokointi 50 + node_index (nollapohjainen; 192.168.0.50, .51, ...).
-- [ ] Osoitekonfliktien tarkistus ja aiempien varausten säilyttäminen.
+- [ ] MAC-pohjainen IP-rekisteri. (Paikallinen toteutus lisätty.)
+- [ ] Automaattinen IP-allokointi 50 + node_index (nollapohjainen; 192.168.0.50, .51, ...). (Toteutus lisätty, testiajo avoinna.)
+- [ ] Osoitekonfliktien tarkistus ja aiempien varausten säilyttäminen. (Rekisterin sisäinen ja annetun inventaarion tarkistus lisätty; aktiivinen verkkohaku avoinna.)
 - [ ] DHCP, static IP, manuaalinen IP ja Wi-Fi-konfiguraatio.
 - [ ] OSC destination ja UDP 9000.
 - [ ] Verkkoyhteyden validointi.
 
 ## 8. Composition Engine
-- [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta.
+- [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta. (Platform/board ja HardCore feature resolver lisätty; Core-valinta avoinna.)
 - [ ] Input-, Output-, Communication- ja UserModule-valinnat.
 - [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen.
 - [ ] Pin bindings -generointi.
 - [ ] Riippuvuuksien resolvointi ja komposition validointi. (Natiivien State/CS/TER-taulujen validointi lisätty; host-testi ajamatta.)
 - [ ] Firmware-lähdekoodin generointi.
-- [ ] Build manifest ja komposition versionointi.
+- [ ] Build manifest ja komposition versionointi. (Deterministinen draft manifest ja SHA-256 lisätty; build-ready manifest avoinna.)
 
 ```text
 Composition
@@ -168,7 +168,7 @@ DISCONNECTED
 - [x] OSC IN -backendin ensimmäinen toteutus (testaamatta).
 - [x] Psycopg-integraation ensimmäinen toteutus (testaamatta).
 - [ ] OSC-moduulin ja nykyisten sensorimoduulien sovittaminen AIGMos Embedded -rakenteeseen.
-- [ ] AQM-kompositiomääritys.
+- [ ] AQM-kompositiomääritys. (ESP8266 BMP180+DHT11 -luonnos lisätty; OSC ja TER vielä avoinna.)
 - [ ] Mittausten kirjoittaminen Stateen #I-rakenteella.
 - [ ] TER-pohjainen mittaus- ja lähetysrutiini, 5 s.
 - [ ] Kalibrointitoiminnallisuus.

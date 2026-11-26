@@ -1,0 +1,36 @@
+{
+  "platform": "ESP8266",
+  "board": "esp8266/boards/d1_mini.json",
+  "buses": {
+    "main": {
+      "kind": "i2c",
+      "sda": 4,
+      "scl": 5
+    }
+  },
+  "modules": [
+    {
+      "id": "bmp",
+      "module": "BMP180",
+      "bindings": {
+        "bus": "main",
+        "address": 119
+      }
+    },
+    {
+      "id": "dht",
+      "module": "DHT11",
+      "bindings": {
+        "data": 14
+      }
+    }
+  ],
+  "features": [
+    "state",
+    "input",
+    "cs",
+    "ter",
+    "routine"
+  ],
+  "flags": []
+}
