@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.10."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.11."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.10'
+VERSION = '1.0.11'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -87,9 +87,20 @@ def range_params(window):
     return seconds, bucket
 
 
-def history(window, nodes):
+def offset_seconds(value):
+    if not re.fullmatch(r'[0-9]{1,2}:[0-9]{2}:[0-9]{2}:[0-9]{2}', value):
+        raise ValueError('Invalid start offset')
+    days, hours, minutes, secs = map(int, value.split(':'))
+    seconds = days * 86400 + hours * 3600 + minutes * 60 + secs
+    if hours > 23 or minutes > 59 or secs > 59 or seconds > 90 * 86400:
+        raise ValueError('Start offset must be 0 seconds to 90 days')
+    return seconds
+
+
+def history(window, nodes, offset='00:00:00:00'):
     seconds, bucket = range_params(window)
-    end = utcnow()
+    now = utcnow()
+    end = now - timedelta(seconds=offset_seconds(offset))
     start = end - timedelta(seconds=seconds)
     where = 'received_at >= %s AND received_at <= %s'
     cal_where = 'observed_at >= %s AND observed_at <= %s'
@@ -126,7 +137,7 @@ def history(window, nodes):
         # Current calibration is independent of the selected chart window.
         # Use the newest paired laser measurement for each node and sensor.
         offset_where = 'observed_at <= %s AND laser_meter_c IS NOT NULL'
-        offset_params = [end]
+        offset_params = [now]
         if nodes:
             offset_where += ' AND node_id = ANY(%s)'
             offset_params.append(nodes)
@@ -156,12 +167,12 @@ HTML = r'''<!doctype html>
 </style></head><body><main><div class="dashboard">
 <header><h1>Air quality monitor</h1><div id="db" class="badge" role="status">Connecting…</div></header>
 <div id="error" role="status"></div>
-<div class="section"><h2>History &amp; comparison</h2><div class="controls"><span id="duration-label">Timeframe (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="duration-label"><input id="range-days" aria-label="Days" type="number" min="0" max="90" step="1" value="00" required>:<input id="range-hours" aria-label="Hours" type="number" min="0" max="23" step="1" value="01" required>:<input id="range-minutes" aria-label="Minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="range-seconds" aria-label="Seconds" type="number" min="0" max="59" step="1" value="00" required></span></div></div>
+<div class="section"><div class="controls"><span id="offset-label">Start offset (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="offset-label"><input id="offset-days" aria-label="Start offset days" type="number" min="0" max="90" step="1" value="00" required>:<input id="offset-hours" aria-label="Start offset hours" type="number" min="0" max="23" step="1" value="00" required>:<input id="offset-minutes" aria-label="Start offset minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="offset-seconds" aria-label="Start offset seconds" type="number" min="0" max="59" step="1" value="00" required></span></div><div class="controls"><span id="duration-label">Timeframe (dd:hh:mm:ss)</span><span class="duration" role="group" aria-labelledby="duration-label"><input id="range-days" aria-label="Days" type="number" min="0" max="90" step="1" value="00" required>:<input id="range-hours" aria-label="Hours" type="number" min="0" max="23" step="1" value="01" required>:<input id="range-minutes" aria-label="Minutes" type="number" min="0" max="59" step="1" value="00" required>:<input id="range-seconds" aria-label="Seconds" type="number" min="0" max="59" step="1" value="00" required></span></div></div>
 <section id="charts" class="charts" role="group" aria-label="Select chart"></section>
 <section id="focus-chart" class="card chart focus-chart" aria-label="Selected chart"><div id="chart-time-range" class="chart-time-range"></div></section>
 <div id="selector" class="selector" role="group" aria-label="Select nodes"></div>
 </div>
-<footer>AirQualityMonitorSystem v1.0.10 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<footer>AirQualityMonitorSystem v1.0.11 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -169,7 +180,7 @@ const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=
 const finite=Number.isFinite, fmt=(v,d=1)=>finite(v)?v.toFixed(d):'—';
 const local=t=>t?new Date(t).toLocaleString('en-GB'):'—';
 const palette=['#55dfb2','#65b6ff','#ffbd69','#c6a5ff','#ff8e9d','#78dbe8','#d1dd72','#f5a9df'];
-const colors=new Map();let nodes=[],selected=new Set(),known=new Set(),windowKey='00:01:00:00',hist=null,liveBusy=false,historyBusy=false,historyPending=false,revision=0;
+const colors=new Map();let nodes=[],selected=new Set(),known=new Set(),windowKey='00:01:00:00',offsetKey='00:00:00:00',hist=null,liveBusy=false,historyBusy=false,historyPending=false,revision=0;
 const errors={live:'',history:''};
 const label=n=>(n.name||'').trim()||n.node_id;
 const name=id=>label(nodes.find(n=>n.node_id===id)||{node_id:id});
@@ -245,6 +256,27 @@ for(const input of durationInputs){
  input.addEventListener('change',applyDuration);
  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur()}});
 }
+const offsetInputs=['days','hours','minutes','seconds'].map(k=>$('offset-'+k));
+function resetOffset(){
+ offsetKey.split(':').forEach((v,i)=>{offsetInputs[i].value=v});
+}
+function applyOffset(){
+ for(const input of offsetInputs){
+  if(!input.checkValidity()){input.reportValidity();resetOffset();return}
+ }
+ const next=offsetInputs.map(input=>String(input.valueAsNumber).padStart(2,'0')).join(':');
+ const seconds=durationSeconds(next);
+ if(seconds<0||seconds>90*86400){
+  const input=offsetInputs[0];
+  input.setCustomValidity('Choose a start offset from 0 seconds to 90 days.');
+  input.reportValidity();input.setCustomValidity('');resetOffset();return;
+ }
+ offsetKey=next;resetOffset();revision++;requestHistory();
+}
+for(const input of offsetInputs){
+ input.addEventListener('change',applyOffset);
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.blur()}});
+}
 function offsetFor(id,key){
  const value=hist?.offsets?.[id]?.[key]?.offset_c;
  return finite(value)?value:null;
@@ -286,7 +318,7 @@ function draw(c){const {canvas,spec,legend}=c;const w=canvas.clientWidth,h=canva
 function nearest(points,t){let a=0,b=points.length;while(a<b){const m=(a+b)>>1;if(points[m][0]<t)a=m+1;else b=m}const p=points[a],q=points[a-1];return !q?p:!p?q:Math.abs(p[0]-t)<Math.abs(q[0]-t)?p:q}
 function hover(c,e){if(!c.layout){c.tip.hidden=true;return}const {start,end,left,right,lines}=c.layout;const r=c.canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<left||x>right){c.tip.hidden=true;return}const t=start+(x-left)/(right-left)*(end-start);const tolerance=Math.max((end-start)/(right-left)*8,(hist.bucket_seconds||5)*1000);const vals=[];for(const l of lines){const p=nearest(l.points,t);if(p&&finite(p[1])&&Math.abs(p[0]-t)<=tolerance)vals.push(`${l.label}: ${fmt(p[1],2)} ${c.spec.unit} (${tickTime(p[0],end-start)})`)}if(!vals.length){c.tip.hidden=true;return}c.tip.textContent=local(t)+'\n'+vals.join('\n');c.tip.hidden=false;const cr=c.card.getBoundingClientRect();c.tip.style.left=Math.max(8,Math.min(e.clientX-cr.left+10,c.card.clientWidth-c.tip.offsetWidth-8))+'px';c.tip.style.top=Math.max(8,e.clientY-cr.top-c.tip.offsetHeight-10)+'px'}
 function renderHistory(){$('chart-time-range').textContent=local(hist.start)+' — '+local(hist.end);for(const c of charts)draw(c)}
-async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now(),dur=durationSeconds(windowKey);hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();setError('history','');return}const q=new URLSearchParams({range:windowKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message)}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
+async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now()-durationSeconds(offsetKey)*1000,dur=durationSeconds(windowKey);hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();setError('history','');return}const q=new URLSearchParams({range:windowKey,offset:offsetKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message)}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
 refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,5000);setInterval(requestHistory,15000);
 </script></body></html>'''
 
@@ -327,12 +359,14 @@ class Handler(BaseHTTPRequestHandler):
                     window = q.get('range', ['00:01:00:00'])[0]
                     nodes = list(dict.fromkeys(q.get('node', [])))
                     range_params(window)
+                    offset = q.get('offset', ['00:00:00:00'])[0]
+                    offset_seconds(offset)
                     if any(not NODE_ID.fullmatch(n) for n in nodes):
                         raise ValueError('Invalid range or node ID')
                 except ValueError as e:
                     self.json(400, {'error': str(e)})
                     return
-                self.json(200, history(window, nodes))
+                self.json(200, history(window, nodes, offset))
             else:
                 self.json(404, {'error': 'Not found'})
         except Exception:
