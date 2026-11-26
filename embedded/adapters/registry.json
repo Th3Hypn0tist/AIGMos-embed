@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "platforms": {
+    "ESP8266": {
+      "boards": [
+        "esp8266/boards/d1_mini.json"
+      ],
+      "status": "metadata_only"
+    },
+    "ESP32-C6": {
+      "boards": [],
+      "status": "pending"
+    },
+    "ESP32-S3": {
+      "boards": [],
+      "status": "reserved"
+    }
+  }
+}

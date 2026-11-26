@@ -33,17 +33,17 @@ Sensor
 ```
 
 ## 3. Platform Adapters
-- [ ] Yhteinen alustarajapinta.
+- [ ] Yhteinen alustarajapinta. (Ensimmäinen ulkoinen C ABI lisätty; adapterit ja testaus avoinna.)
 - [ ] GPIO, ADC, PWM, I²C, SPI, UART.
 - [ ] Timers, flash storage, network.
 - [ ] ESP8266-adapteri.
 - [ ] ESP32-C6-adapteri.
 - [ ] ESP32-S3-adapterivalmius (ei vielä toteutusvaatimusta).
 - [ ] Alustakohtaiset toolchainit.
-- [ ] Piirilevykohtaiset pinout-määritykset, pin capabilities ja rajoitukset.
+- [ ] Piirilevykohtaiset pinout-määritykset, pin capabilities ja rajoitukset. (D1 mini -metadata lisätty, verifioimatta.)
 
 ## 4. Module Registry
-- [ ] Yhteinen moduulirakenne.
+- [ ] Yhteinen moduulirakenne. (Ensimmäinen koneellisesti luettava sensorirekisteri lisätty.)
 - [ ] Tunnistusfunktiot, liityntävaatimukset, pin bindings.
 - [ ] Input- ja Command-määritykset.
 - [ ] Moduulikohtaiset konfiguraatiot.
@@ -79,9 +79,9 @@ Module Registry
 - [ ] Moduulien liityntävaatimusten automaattinen esittäminen.
 - [ ] Interaktiivinen pinnien bindaus ja capabilities-suodatus.
 - [ ] Varattujen pinnien ja boot-strapping-rajoitusten tunnistus.
-- [ ] Pin conflict detection.
-- [ ] Jaetut väylät ja I²C-osoitekonfliktit.
-- [ ] Puuttuvien bindausten validointi.
+- [ ] Pin conflict detection. (Python-validaattori ja testit lisätty; ajamatta.)
+- [ ] Jaetut väylät ja I²C-osoitekonfliktit. (Validaattori lisätty; testit ajamatta.)
+- [ ] Puuttuvien bindausten validointi. (Ensimmäinen toteutus eksplisiittisille I2C/GPIO-bindauksille.)
 - [ ] Moduulikohtainen live-testaus.
 
 ## 7. Network Manager

@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "modules": {
+    "BMP180": {
+      "kind": "input",
+      "interface": "i2c",
+      "bindings": {
+        "bus": "i2c",
+        "address": [
+          119
+        ]
+      },
+      "inputs": [
+        {
+          "name": "temperature_c",
+          "type": "real"
+        },
+        {
+          "name": "pressure_hpa",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": {
+        "register": 208,
+        "id": 85
+      },
+      "status": "metadata_only"
+    },
+    "BMP280": {
+      "kind": "input",
+      "interface": "i2c",
+      "bindings": {
+        "bus": "i2c",
+        "address": [
+          118,
+          119
+        ]
+      },
+      "inputs": [
+        {
+          "name": "temperature_c",
+          "type": "real"
+        },
+        {
+          "name": "pressure_hpa",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": {
+        "register": 208,
+        "id": 88
+      },
+      "status": "metadata_only"
+    },
+    "DHT11": {
+      "kind": "input",
+      "interface": "gpio",
+      "bindings": {
+        "data": "gpio"
+      },
+      "inputs": [
+        {
+          "name": "temperature_c",
+          "type": "real"
+        },
+        {
+          "name": "humidity_rh",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": null,
+      "status": "metadata_only"
+    },
+    "HDC1080": {
+      "kind": "input",
+      "interface": "i2c",
+      "bindings": {
+        "bus": "i2c",
+        "address": [
+          64
+        ]
+      },
+      "inputs": [
+        {
+          "name": "temperature_c",
+          "type": "real"
+        },
+        {
+          "name": "humidity_rh",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": null,
+      "status": "metadata_only"
+    },
+    "Si7021": {
+      "kind": "input",
+      "interface": "i2c",
+      "bindings": {
+        "bus": "i2c",
+        "address": [
+          64
+        ]
+      },
+      "inputs": [
+        {
+          "name": "temperature_c",
+          "type": "real"
+        },
+        {
+          "name": "humidity_rh",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": null,
+      "status": "metadata_only"
+    },
+    "CCS811": {
+      "kind": "input",
+      "interface": "i2c",
+      "bindings": {
+        "bus": "i2c",
+        "address": [
+          90,
+          91
+        ]
+      },
+      "inputs": [
+        {
+          "name": "eco2_ppm",
+          "type": "real"
+        },
+        {
+          "name": "tvoc_ppb",
+          "type": "real"
+        }
+      ],
+      "commands": [],
+      "dependencies": [],
+      "probe": {
+        "register": 32,
+        "id": 129
+      },
+      "status": "metadata_only"
+    }
+  }
+}

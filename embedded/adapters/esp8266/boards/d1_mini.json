@@ -1,0 +1,114 @@
+{
+  "id": "d1_mini",
+  "platform": "ESP8266",
+  "status": "unverified",
+  "pins": {
+    "0": {
+      "label": "D3",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": false
+    },
+    "1": {
+      "label": "TX",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": false
+    },
+    "2": {
+      "label": "D4",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": false
+    },
+    "3": {
+      "label": "RX",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": false
+    },
+    "4": {
+      "label": "D2",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": true
+    },
+    "5": {
+      "label": "D1",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": true
+    },
+    "12": {
+      "label": "D6",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": true
+    },
+    "13": {
+      "label": "D7",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": true
+    },
+    "14": {
+      "label": "D5",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": true
+    },
+    "15": {
+      "label": "D8",
+      "capabilities": [
+        "gpio",
+        "i2c"
+      ],
+      "probe_safe": false
+    },
+    "16": {
+      "label": "D0",
+      "capabilities": [
+        "gpio"
+      ],
+      "probe_safe": false
+    }
+  },
+  "defaults": {
+    "i2c": {
+      "sda": 4,
+      "scl": 5
+    },
+    "dht": 14
+  },
+  "reserved": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "strap": {
+    "0": 1,
+    "2": 1,
+    "15": 0
+  }
+}
