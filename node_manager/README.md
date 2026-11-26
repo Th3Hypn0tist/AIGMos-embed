@@ -12,8 +12,7 @@ composition, and inspect or prepare its draft build. Example:
 `applications/aqm/compositions/esp8266.json`.
 
 Prepare build is not Push to node. No firmware is flashed and no active
-composition is set. Hardware probe, target build, interactive pin editor
-and final AIGMos Panel integration are outstanding. The AQM pending_ter
+composition is set. Hardware probe execution, target build and final AIGMos Panel integration are outstanding. The AQM pending_ter
 field documents intended commands; it is not executable yet.
 
 Menu 14 edits a node's hardware composition. It displays GPIO ownership, reserved and strap pins, module requirements and imported probe candidates. Each successful edit creates/selects a validated composition version; it never changes active firmware. Probe candidates are not selected automatically. Live hardware tests are not yet available.
@@ -23,3 +22,5 @@ Menu 4 provides network configuration. Linux neighbor cache is advisory, not a c
 Menu 15 displays derived State inputs and module commands, edits feature/variable/command/TER sections as JSON, and selects historical composition versions. Draft validation does not establish build readiness. pending_ter remains non-executable. Registry maps use canonical lexical order in the native generator; command lists retain their explicit order.
 
 Menu 16 prepares a build plan, compiles selected runtime and module sources into host objects, shows logs and compares the saved plan against the selected composition and current source hashes. Host objects are not firmware. Push is deliberately blocked until a target builder and verification adapter exist. Use a dedicated build directory; build logs describe past compilation, not proof of artifact integrity.
+
+The optional ESP8266 adapter source is in embedded/adapters/esp8266; target build and network provisioning remain pending.

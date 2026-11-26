@@ -5,7 +5,23 @@
       "boards": [
         "esp8266/boards/d1_mini.json"
       ],
-      "status": "metadata_only"
+      "status": "adapter_source_unverified",
+      "backends": [
+        {
+          "id": "arduino",
+          "optional": true,
+          "sources": [
+            "embedded/adapters/esp8266/adapter.cpp"
+          ],
+          "headers": [
+            "embedded/adapters/esp8266/adapter.h"
+          ],
+          "external_dependencies": [
+            "ESP8266 Arduino core"
+          ],
+          "status": "unverified"
+        }
+      ]
     },
     "ESP32-C6": {
       "boards": [],

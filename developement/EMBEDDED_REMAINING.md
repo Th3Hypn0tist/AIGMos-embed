@@ -17,7 +17,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Build/deployment/monitor-näkymät ja CS-integraatio; estä Push to node kun build ei ole valmis. (Build/deployment-valikko, host compile, plan-hash/stale-status ja fail-closed Push lisätty; target/monitor/CS ja testiajo avoinna.)
 
 ## P1 – ESP8266:n ajettava kompositio
-- [ ] Ulkoinen ESP8266 SDK -adapteri: GPIO, I²C, monotonic timer/delay, UART, Wi-Fi, UDP; flash-rajapinnat tarpeen mukaan.
+- [ ] Ulkoinen ESP8266 SDK -adapteri: GPIO, I²C, monotonic timer/delay, UART, Wi-Fi, UDP; flash-rajapinnat tarpeen mukaan. (Valinnainen ulkoinen Arduino-core adapteri lisätty GPIO/I2C/UART/timer/delay/UDP:lle; Wi-Fi setup, SDK build ja testit avoinna. Ei pakollinen runtime-riippuvuus.)
 - [ ] Tarkista D1 mini -pinout ja sähköiset rajoitteet; BMP180 GPIO4/5, osoite 0x77; DHT11 GPIO14.
 - [ ] Vahvista AIGMos 1.9:n TER- ja CS-semantiikka (condition, aktivointi/resetointi, run, komentojen järjestys ja virheet).
 - [ ] Ajastettu Trigger, Eventin komentolista ja CS:n kautta käynnistettävä Runner; testaa ettei aktiivinen Trigger tai Runner aiheuta toistuvaa tahatonta ajoa.

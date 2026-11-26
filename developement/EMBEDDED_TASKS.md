@@ -40,7 +40,7 @@ Sensor
 - [ ] Yhteinen alustarajapinta. (Ensimmäinen ulkoinen C ABI lisätty; adapterit ja testaus avoinna.)
 - [ ] GPIO, ADC, PWM, I²C, SPI, UART.
 - [ ] Timers, flash storage, network.
-- [ ] ESP8266-adapteri.
+- [ ] ESP8266-adapteri. (Valinnainen Arduino-core C++ adapteri: GPIO, I2C, UART, monotonic/delay, UDP; SDK-käännös, Wi-Fi setup ja laitetestit avoinna.)
 - [ ] ESP32-C6-adapteri.
 - [ ] ESP32-S3-adapterivalmius (ei vielä toteutusvaatimusta).
 - [ ] Alustakohtaiset toolchainit. (PATH-tunnistus lisätty; SDK-versioiden ja buildin validointi avoinna.)
