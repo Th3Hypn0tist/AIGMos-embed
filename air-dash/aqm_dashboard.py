@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.14."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.15."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.14'
+VERSION = '1.0.15'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -176,7 +176,7 @@ HTML = r'''<!doctype html>
 <section id="focus-chart" class="card chart focus-chart" aria-label="Selected chart"><div id="chart-time-range" class="chart-time-range"></div></section>
 <div id="selector" class="selector" role="group" aria-label="Select nodes"></div>
 </div>
-<footer>AirQualityMonitorSystem v1.0.14 · Node discovery every 1 s · History refresh every 1 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<footer>AirQualityMonitorSystem v1.0.15 · Node discovery every 5 s · History refresh every 1 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -328,7 +328,7 @@ function nearest(points,t){let a=0,b=points.length;while(a<b){const m=(a+b)>>1;i
 function hover(c,e){if(!c.layout){c.tip.hidden=true;return}const {start,end,left,right,lines}=c.layout;const r=c.canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<left||x>right){c.tip.hidden=true;return}const t=start+(x-left)/(right-left)*(end-start);const tolerance=Math.max((end-start)/(right-left)*8,(hist.bucket_seconds||5)*1000);const vals=[];for(const l of lines){const p=nearest(l.points,t);if(p&&finite(p[1])&&Math.abs(p[0]-t)<=tolerance)vals.push(`${l.label}: ${fmt(p[1],2)} ${c.spec.unit} (${tickTime(p[0],end-start)})`)}if(!vals.length){c.tip.hidden=true;return}c.tip.textContent=local(t)+'\n'+vals.join('\n');c.tip.hidden=false;const cr=c.card.getBoundingClientRect();c.tip.style.left=Math.max(8,Math.min(e.clientX-cr.left+10,c.card.clientWidth-c.tip.offsetWidth-8))+'px';c.tip.style.top=Math.max(8,e.clientY-cr.top-c.tip.offsetHeight-10)+'px'}
 function renderHistory(){$('chart-time-range').textContent=local(hist.start)+' — '+local(hist.end);for(const c of charts)draw(c)}
 async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const [start,end]=windowBounds(Date.now(),windowKey,offsetKey);hist={start:new Date(start).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();setError('history','');return}const q=new URLSearchParams({range:windowKey,offset:offsetKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message)}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
-refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,1000);setInterval(()=>{if(!historyBusy)requestHistory()},1000);
+refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,5000);setInterval(()=>{if(!historyBusy)requestHistory()},1000);
 </script></body></html>'''
 
 
