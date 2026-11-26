@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.11."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.12."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.11'
+VERSION = '1.0.12'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -172,7 +172,7 @@ HTML = r'''<!doctype html>
 <section id="focus-chart" class="card chart focus-chart" aria-label="Selected chart"><div id="chart-time-range" class="chart-time-range"></div></section>
 <div id="selector" class="selector" role="group" aria-label="Select nodes"></div>
 </div>
-<footer>AirQualityMonitorSystem v1.0.11 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<footer>AirQualityMonitorSystem v1.0.12 · Node discovery every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -190,7 +190,7 @@ async function api(path){const r=await fetch(path,{cache:'no-store',signal:Abort
 function renderSelector(){const root=$('selector');root.replaceChildren();if(!nodes.length){root.append(el('span','muted small','No nodes registered'));return}for(const n of nodes){const l=el('label');const box=el('input');box.type='checkbox';box.checked=selected.has(n.node_id);box.addEventListener('change',()=>{box.checked?selected.add(n.node_id):selected.delete(n.node_id);revision++;requestHistory()});const sw=el('i','swatch');sw.style.color=color(n.node_id);l.append(box,sw,document.createTextNode(label(n)));root.append(l)}}
 async function refreshLive(){if(liveBusy)return;liveBusy=true;try{const d=await api('/api/live');const old=nodes.map(n=>[n.node_id,n.name]);nodes=d.nodes;let changed=false;for(const n of nodes){if(!known.has(n.node_id)){known.add(n.node_id);selected.add(n.node_id);changed=true}color(n.node_id)}for(const id of [...known])if(!nodes.some(n=>n.node_id===id)){selected.delete(id);known.delete(id);changed=true}if(changed||JSON.stringify(old)!==JSON.stringify(nodes.map(n=>[n.node_id,n.name])))renderSelector();$('db').className='badge ok';$('db').textContent='DATABASE ONLINE';setError('live','');if(changed){revision++;requestHistory()}}catch(e){$('db').className='badge bad';$('db').textContent='DATABASE UNAVAILABLE';setError('live','Live data unavailable: '+e.message+' · displayed values may be stale.')}finally{liveBusy=false}}
 const chartSpecs=[
- {short:'Temp',title:'Temperature (laser corrected where available)',unit:'°C',series:[['temperature_c','RH sensor',false],['bmp_temperature_c','BMP280',true]]},
+ {short:'Temp',title:'Temperature (BMP280 primary; laser corrected where available)',unit:'°C',series:[['bmp_temperature_c','BMP280 (primary)',false],['temperature_c','RH sensor (secondary)',true]]},
  {short:'ΔT',title:'Temperature difference (corrected when both offsets exist)',unit:'°C',series:[['delta_c','BMP − RH sensor',false]]},
  {short:'RH',title:'Relative humidity',unit:'%',series:[['humidity_rh','RH',false]]},
  {short:'Pressure',title:'Atmospheric pressure',unit:'hPa',series:[['pressure_hpa','Pressure',false]]},
