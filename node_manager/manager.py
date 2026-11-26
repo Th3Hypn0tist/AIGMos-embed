@@ -31,6 +31,21 @@ class Manager:
         self.registry.save()
         return node
 
+    def prepare_probe(self,mac,output):
+        from .probe import prepare
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return prepare(node["platform"],node["board"],output)
+
+    def import_probe(self,mac,observations):
+        from .probe import plan,interpret
+        node=self.registry.data["nodes"][mac_id(mac)]
+        if mac_id(observations["mac"])!=node["id"]:
+            raise ValueError("probe identity mismatch")
+        inventory=interpret(plan(node["platform"],node["board"]),observations)
+        node["inventory"]=inventory
+        self.registry.save()
+        return inventory
+
     def network(self,mac,mode,address=None):
         result=self.registry.network(mac,mode,address)
         self.registry.save()

@@ -71,10 +71,10 @@ Module Registry
 ## 5. Node Manager
 - [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus. (Passiivinen Linux USB-serial inventory lisätty; Eksplisiittinen esptool 4.x MCU/MAC/flash-tunnistus ja board-valinta lisätty; fyysinen testi avoinna.)
 - [ ] MAC-pohjainen node ID ja pysyvä node registry. (Atominen paikallinen JSON-rekisteri lisätty; testiajo avoinna.)
-- [ ] Alustakohtaisen probe-firmwaren muodostaminen.
+- [ ] Alustakohtaisen probe-firmwaren muodostaminen. (Board-kohtainen probe plan ja C-taulut sekä geneerinen I2C scan lisätty; SDK-entry point, GPIO-luku, serial-report ja build avoinna.)
 - [ ] Probe-firmwaren flashaus eksplisiittisellä Detect hardware -käskyllä.
 - [ ] I²C-sensoritunnistus ja GPIO-tunnistus sallituilla pinneillä.
-- [ ] Hardware inventory.
+- [ ] Hardware inventory. (MAC-tarkistettu JSON-import ja ID-match/candidate-erottelu lisätty; live-probe avoinna.)
 - [ ] Moduulien manuaalinen lisääminen, poistaminen ja vaihtaminen.
 - [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen. (SHA-256-versiot ja palautus lisätty; testiajo avoinna.)
 

@@ -8,8 +8,8 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] USB-porttien live-listaus ja laitteen valinta. (Valinta ja uudelleenlistaus Identify-valikossa lisätty; jatkuva päivitys avoinna.)
 - [ ] MCU-, MAC- ja flash-kokoluokan tunnistus bootloaderin kautta ilman firmwarekirjoitusta; toolchain-tunnistus. (Esptool 4.x -rajapinta ja PATH-tunnistus lisätty, mock-testit ja fyysinen testi ajamatta.)
 - [ ] Pysyvä node-identiteetti, laiteinventaario ja valittu vs aktiivinen kompositio. (Tunnistetun MAC:n ja flash-koon tallennus lisätty; aktiivinen versio vasta deployment-verifioinnissa.)
-- [ ] ESP8266:n probe-firmwaren build ja eksplisiittinen Detect hardware; ei automaattista flashausta. Huomioi olemassa oleva firmware ja palautus.
-- [ ] Sallitut I²C-probet ja GPIO-inventaario; epävarmat sensorit merkitään ehdokkaiksi, ei varmoiksi havainnoiksi.
+- [ ] ESP8266:n probe-firmwaren build ja eksplisiittinen Detect hardware; ei automaattista flashausta. Huomioi olemassa oleva firmware ja palautus. (Probe plan ja C-taulut generoidaan; SDK-build/flash puuttuvat.)
+- [ ] Sallitut I²C-probet ja GPIO-inventaario; epävarmat sensorit merkitään ehdokkaiksi, ei varmoiksi havainnoiksi. (I2C scan -primitiivi ja inventory JSON-import lisätty; GPIO-luku/serial-report ja testit avoinna.)
 - [ ] Hardware-, Modules- ja Pin Mapper -näkymät: lisää/poista/vaihda, pinout, capabilities, reserved/strap, jaetut väylät, osoite- ja pinnikonfliktit, live-testi.
 - [ ] Network-näkymä: DHCP/auto/static, Wi-Fi-konfiguraatio, USB- ja verkkoinventaarion yhdistys, osoitekonfliktit ja saavutettavuus; tunnukset paikallisesti eikä Gitiin.
 - [ ] Säilytä C6:n .50-varaus; ESP8266 .51; auto 50 + node_index. Älä muuta C6:n firmwarea.

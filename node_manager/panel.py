@@ -14,6 +14,7 @@ def run(manager):
         print("1 Nodes  2 USB inventory  3 Register node  4 Network")
         print("5 Configure / import  6 Selected composition  7 Prepare build")
         print("8 Module registry  9 Board registry  10 Identify MCU  11 Toolchain  0 Exit")
+        print("12 Prepare probe  13 Import probe observations")
         try:
             action=input("> ").strip()
             if action=="0": return
@@ -47,6 +48,10 @@ def run(manager):
                     if not 1<=index<=len(boards): raise ValueError("invalid board selection")
                     show(manager.register_identified(identity,boards[index-1]))
             elif action=="11": show(toolchain())
+            elif action=="12": show(manager.prepare_probe(input("MAC: "),input("Output directory: ")))
+            elif action=="13":
+                mac=input("MAC: ");data=json.loads(pathlib.Path(input("Probe JSON: ")).read_text())
+                show(manager.import_probe(mac,data))
             elif action in ("8","9"):
                 from .composition import load
                 show(load("embedded/modules/registry.json" if action=="8" else "embedded/adapters/registry.json"))
