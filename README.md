@@ -68,6 +68,10 @@ UDP/9000 → Python System Expose → #OSC → AQM UserModule → PostgreSQL →
 
 This is the target flow, not yet executable. Existing database schema, dashboard,
 laser calibration workflow and C6 production firmware are preserved.
+Planned: move per-sensor laser-reference temperature correction into the node,
+retain raw measurements and calibration history, and avoid applying the same
+correction again in the dashboard. Legacy compatibility and field semantics
+must be verified before migration.
 
 ## Development
 

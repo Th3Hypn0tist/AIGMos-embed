@@ -36,6 +36,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Vahvista AIGMos 1.9 System Expose -sopimus; geneerinen OSC IN → #OSC, ei AQM- tai DB-logiikkaa Exposessa.
 - [ ] Python-backendin AQM UserModule: #OSC → nykyiset PostgreSQL-funktiot, AirQualityMon; säilytä wire-version ja ingest-identiteetin yhteensopivuus.
 - [ ] Säilytä kalibrointi, lasermittaus, nykyinen tietokantaskeema ja dashboard; varmista myös kalibroinnin kulku.
+- [ ] Siirrä AQM-lämpötilan korjaus nodeen: dashboardissa nykyisin laserreferenssistä laskettava korjattu lämpötila tuotetaan nodessa (sensorikohtainen offset = referenssimittaus − raakalukema; korjattu = raakalukema + offset). Välitä kalibrointiarvo noden konfiguraatioon ja säilytä se uudelleenkäynnistyksissä. Dashboard näyttää noden korjatun lukeman ilman kaksinkertaista korjausta. Säilytä raakamittaukset ja kalibrointihistoria; määritä wire/DB-kenttien semantiikka ja legacy-nodejen yhteensopivuus ennen toteutusta. Testaa puuttuva referenssi, uusi kalibrointi, restart ja rinnakkaiskäyttö C6:n kanssa.
 - [ ] Backendin dekoodaus-, virhe-, duplikaatti- ja DB-integraatiotestit.
 - [ ] Fyysinen ESP8266-testi: sensorit, ajoitus, Wi-Fi-kuormitus, OSC, DB, dashboard; vertaa legacy C6:n rinnalla.
 - [ ] Pitkäkestoinen testi, verkkokatkos, uudelleenkäynnistys, puuttuva sensori, muistinkäyttö ja ajoitus. Hyväksy ESP8266 ennen C6-migraatiota.

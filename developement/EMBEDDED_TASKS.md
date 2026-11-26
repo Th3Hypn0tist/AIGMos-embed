@@ -179,6 +179,7 @@ DISCONNECTED
 - [ ] Mittausten kirjoittaminen Stateen #I-rakenteella. (BMP180/DHT11 sample-rajapinnat lisätty, virheessä NULL; integraatiotestaus avoinna.)
 - [ ] TER-pohjainen mittaus ja lähetys: ajastettu Trigger 5000 ms → Event (run aqm_sample) → Runner (um.bmp.read, um.dht.read, osc.out $master #I:sensorit:data). Kompositiossa pending_ter, ei vielä ajettava. $master=192.168.0.18, UDP 9000.
 - [ ] Kalibrointitoiminnallisuus.
+- [ ] Siirrä AQM-lämpötilan korjaus nodeen: dashboardissa nykyisin laserreferenssistä laskettava korjattu lämpötila tuotetaan nodessa (sensorikohtainen offset = referenssimittaus − raakalukema; korjattu = raakalukema + offset). Välitä kalibrointiarvo noden konfiguraatioon ja säilytä se uudelleenkäynnistyksissä. Dashboard näyttää noden korjatun lukeman ilman kaksinkertaista korjausta. Säilytä raakamittaukset ja kalibrointihistoria; määritä wire/DB-kenttien semantiikka ja legacy-nodejen yhteensopivuus ennen toteutusta. Testaa puuttuva referenssi, uusi kalibrointi, restart ja rinnakkaiskäyttö C6:n kanssa.
 - [ ] System Expose -yhteensopiva Python OSC IN → #OSC → AQM DB-käsittely; verifioi 1.9 Expose -sopimus.
 - [ ] Säilytä lasermittaus, kalibrointi, mittausdata, DB-funktiot ja dashboard; vain node→backend-protokolla muuttuu.
 - [ ] Backendin integraatiotestaus.
