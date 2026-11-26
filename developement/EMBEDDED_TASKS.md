@@ -15,7 +15,7 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 - [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo avoinna; #I-kirjoitusrajapinta lisätty.)
 - [ ] Command Surface ja Command Registry. (Natiivin rekisterin ja dispatchin ensimmäinen toteutus lisätty; host-testi ja AC avoinna.)
 - [ ] Trigger, Event, Runner ja TER-suoritusketju. (Korjattu erillisiin rekistereihin: Trigger condition/state, Event trigger/commands, Runner state/commands; host-testit päivitetty, ajo avoinna.)
-- [ ] TER:n condition-semantiiikka, aktivointi ja resetointi vahvistettava AIGMos 1.9:n kanssa.
+- [ ] TER:n condition-semantiikka, aktivointi ja resetointi vahvistettava AIGMos 1.9:n kanssa.
 - [ ] Valinnainen ExpressionEngine ja Expression Registry; Expression Condition != Trigger Condition, ei TER-riippuvuutta. Tarkasta 1.9-syntaksi ennen toteutusta.
 - [ ] Rutiinien suoritus. (Nimetyt &-rutiinit, järjestetty suoritus, virhekatkaisu ja rekursiosuoja lisätty; host-testi ajamatta.)
 - [ ] AccessCore-tuen valinnainen sisällyttäminen. (AIGMOS_ACCESSCORE-build flag ja fail-closed CS-valtuutusrajapinta lisätty; ei vielä varsinaista AccessCore-integraatiota; testi ajamatta.)
@@ -99,10 +99,10 @@ Module Registry
 ## 8. Composition Engine
 - [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta. (Platform/board ja HardCore feature resolver lisätty; Core-valinta avoinna.)
 - [ ] Input-, Output-, Communication- ja UserModule-valinnat.
-- [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen.
+- [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen. (C99-taulugeneraattori lisätty; testiajo ja täydet moduulibindaukset avoinna.)
 - [ ] Pin bindings -generointi.
 - [ ] Riippuvuuksien resolvointi ja komposition validointi. (Natiivien State/CS/TER-taulujen validointi lisätty; host-testi ajamatta.)
-- [ ] Firmware-lähdekoodin generointi.
+- [ ] Firmware-lähdekoodin generointi. (Ensimmäinen State/CS/TER-taulujen generointi; ei vielä kokonainen firmware.)
 - [ ] Build manifest ja komposition versionointi. (Deterministinen draft manifest ja SHA-256 lisätty; build-ready manifest avoinna.)
 
 ```text

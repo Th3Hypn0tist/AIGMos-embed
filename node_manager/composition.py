@@ -51,6 +51,9 @@ def resolve(definition):
                 "features": [f for f in known if f in selected], "flags": sorted(flags),
                 "modules": instances, "buses": definition["buses"],
                 "inputs": inputs, "commands": commands,
+                "application_commands": definition.get("application_commands", []),
+                "command_bindings": definition.get("commands", {}),
+                "ter": definition.get("ter", {}),
                 "runtime_dependencies": [], "external_dependencies": sorted(dependencies),
                 "build_ready": False}
     raw = json.dumps(manifest, sort_keys=True, separators=(",", ":"), allow_nan=False)
