@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.3."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.4."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -68,8 +68,22 @@ def live():
     return {'now': utcnow(), 'nodes': rows, 'version': VERSION}
 
 
+def range_params(window):
+    # Retain the original API presets; numeric range means minutes.
+    if window in RANGES:
+        return RANGES[window]
+    if not re.fullmatch(r'[0-9]{1,6}', window):
+        raise ValueError('Invalid time range')
+    minutes = int(window)
+    if not 1 <= minutes <= 129600:
+        raise ValueError('Time range must be 1–129600 minutes')
+    seconds = minutes * 60
+    bucket = next(b for limit, b in RANGES.values() if seconds <= limit)
+    return seconds, bucket
+
+
 def history(window, nodes):
-    seconds, bucket = RANGES[window]
+    seconds, bucket = range_params(window)
     end = utcnow()
     start = end - timedelta(seconds=seconds)
     where = 'received_at >= %s AND received_at <= %s'
@@ -133,17 +147,17 @@ HTML = r'''<!doctype html>
 <meta name="color-scheme" content="dark"><title>AirQualityMonitorSystem</title>
 <style>
 :root{color-scheme:dark;--bg:#090e16;--panel:#111a27;--line:#26364a;--text:#e5edf7;--muted:#8c9fb6;--accent:#55dfb2;--warn:#ffbd69;--bad:#ff8d83}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,sans-serif;font-variant-numeric:tabular-nums}main{max-width:1500px;margin:auto;padding:16px 20px 40px}header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}h1{font-size:clamp(23px,3vw,29px);letter-spacing:-.04em;margin:3px 0}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0}.eyebrow{font-size:11px;color:var(--accent);font-weight:750;letter-spacing:.15em;text-transform:uppercase}.muted{color:var(--muted)}.small{font-size:12px}.badge{border:1px solid var(--line);border-radius:7px;padding:7px 11px;white-space:nowrap;color:var(--muted)}.ok{color:var(--accent)}.bad{color:var(--bad)}.warn{color:var(--warn)}.section{margin:15px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.section h2{margin:0}.nodes{border:1px solid var(--line);background:var(--panel);border-radius:8px;overflow:auto}.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:16px;min-width:0}.live-table{min-width:920px;font-size:12px}.live-table th,.live-table td{padding:7px 10px;vertical-align:middle}.live-table th{font-size:10px;line-height:1.3}.live-table tr:last-child td{border-bottom:0}.live-table .node-name{font-weight:700;display:flex;align-items:center;gap:7px}.node-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none}.live-table .node-meta{font-size:10px;color:var(--muted)}.live-table .live-value{font-size:15px;font-weight:600}.live-table .live-status{font-size:11px;font-weight:650}.live-table .diag-button{font-size:11px;padding:3px 7px}.live-table .diag-row td{text-align:left;color:var(--muted);white-space:normal;background:var(--bg);font-size:12px}.diag-row[hidden]{display:none}.diag-line{display:flex;flex-wrap:wrap;gap:6px 22px}.live-table .stale-row .live-value{color:var(--muted)}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{font:inherit;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}button.active{color:var(--accent);border-color:var(--accent)}button:hover{color:var(--text)}.selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.selector label{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer}input{accent-color:var(--accent)}.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.chart{position:relative}.chart h3{margin-bottom:4px}.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:11px;color:var(--muted);min-height:20px}.legend span{display:inline-flex;gap:6px;align-items:center}.swatch{width:18px;border-top:2px solid currentColor;display:inline-block}.swatch.dash{border-top-style:dashed}.swatch.dot{width:7px;height:7px;border-radius:50%;background:currentColor;border:0}.plot{width:100%;height:235px;display:block;touch-action:pan-y}.tip{position:absolute;pointer-events:none;z-index:2;max-width:calc(100% - 20px);background:#080d15;border:1px solid #40556e;border-radius:6px;padding:8px 10px;font-size:11px;box-shadow:0 5px 15px #0007;white-space:pre-line}.tip[hidden]{display:none}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;text-align:right;font-size:12px}th,td{padding:9px 10px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}footer{margin-top:25px;color:var(--muted);font-size:12px}#error{color:var(--bad);margin:8px 0;white-space:pre-wrap}#error:empty{display:none}#history-status{margin:5px 0 8px}.empty{padding:24px;color:var(--muted);text-align:center}.chartnote{color:var(--muted);font-size:11px;margin-top:4px}@media(max-width:800px){main{padding:12px 10px 30px}.charts{grid-template-columns:1fr}header{flex-wrap:wrap;gap:8px}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,sans-serif;font-variant-numeric:tabular-nums}main{max-width:1500px;margin:auto;padding:16px 20px 40px}header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}h1{font-size:clamp(23px,3vw,29px);letter-spacing:-.04em;margin:3px 0}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:0}.eyebrow{font-size:11px;color:var(--accent);font-weight:750;letter-spacing:.15em;text-transform:uppercase}.muted{color:var(--muted)}.small{font-size:12px}.badge{border:1px solid var(--line);border-radius:7px;padding:7px 11px;white-space:nowrap;color:var(--muted)}.ok{color:var(--accent)}.bad{color:var(--bad)}.warn{color:var(--warn)}.section{margin:15px 0 8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.section h2{margin:0}.nodes{border:1px solid var(--line);background:var(--panel);border-radius:8px;overflow:auto}.card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:16px;min-width:0}.live-table{min-width:920px;font-size:12px}.live-table th,.live-table td{padding:7px 10px;vertical-align:middle}.live-table th{font-size:10px;line-height:1.3}.live-table tr:last-child td{border-bottom:0}.live-table .node-name{font-weight:700;display:flex;align-items:center;gap:7px}.node-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex:none}.live-table .node-meta{font-size:10px;color:var(--muted)}.live-table .live-value{font-size:15px;font-weight:600}.live-table .live-status{font-size:11px;font-weight:650}.live-table .diag-button{font-size:11px;padding:3px 7px}.live-table .diag-row td{text-align:left;color:var(--muted);white-space:normal;background:var(--bg);font-size:12px}.diag-row[hidden]{display:none}.diag-line{display:flex;flex-wrap:wrap;gap:6px 22px}.live-table .stale-row .live-value{color:var(--muted)}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button{font:inherit;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}button.active{color:var(--accent);border-color:var(--accent)}button:hover{color:var(--text)}.selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.selector label{display:flex;align-items:center;gap:7px;padding:6px 10px;background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer}input{accent-color:var(--accent)}#range-minutes{width:110px;font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 9px}.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.chart{position:relative}.chart h3{margin-bottom:4px}.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:11px;color:var(--muted);min-height:20px}.legend span{display:inline-flex;gap:6px;align-items:center}.swatch{width:18px;border-top:2px solid currentColor;display:inline-block}.swatch.dash{border-top-style:dashed}.swatch.dot{width:7px;height:7px;border-radius:50%;background:currentColor;border:0}.plot{width:100%;height:235px;display:block;touch-action:pan-y}.tip{position:absolute;pointer-events:none;z-index:2;max-width:calc(100% - 20px);background:#080d15;border:1px solid #40556e;border-radius:6px;padding:8px 10px;font-size:11px;box-shadow:0 5px 15px #0007;white-space:pre-line}.tip[hidden]{display:none}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;text-align:right;font-size:12px}th,td{padding:9px 10px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}footer{margin-top:25px;color:var(--muted);font-size:12px}#error{color:var(--bad);margin:8px 0;white-space:pre-wrap}#error:empty{display:none}#history-status{margin:5px 0 8px}.empty{padding:24px;color:var(--muted);text-align:center}.chartnote{color:var(--muted);font-size:11px;margin-top:4px}@media(max-width:800px){main{padding:12px 10px 30px}.charts{grid-template-columns:1fr}header{flex-wrap:wrap;gap:8px}}
 </style></head><body><main>
 <header><div><div class="eyebrow">AirQualityMon / PostgreSQL + TimescaleDB</div><h1>Air quality monitor</h1><div class="muted">Multi-node telemetry · read-only · laser-corrected temperature charts</div></div><div id="db" class="badge">Connecting…</div></header>
 <div id="error" role="status"></div>
 <div class="section"><h2>Live nodes (raw readings)</h2><span class="muted small" id="live-time">Waiting for database</span></div><section id="nodes" class="nodes"></section>
-<div class="section"><h2>History &amp; comparison</h2><div id="ranges" class="controls"></div></div>
+<div class="section"><h2>History &amp; comparison</h2><div class="controls"><label for="range-minutes">Timeframe (min)</label><input id="range-minutes" type="number" min="1" max="129600" step="1" value="60" required></div></div>
 <div id="selector" class="selector"></div><p id="history-status" class="muted small">Loading history…</p>
 <section id="charts" class="charts"></section>
 <div class="section"><h2>Calibration observations</h2><span class="muted small" id="cal-count"></span></div>
 <section class="card tablewrap"><table><thead><tr><th>Observed at</th><th>Node</th><th>RH sensor °C</th><th>BMP280 °C</th><th>RH %</th><th>Laser reference °C</th><th>RH sensor − ref °C</th><th>BMP280 − ref °C</th></tr></thead><tbody id="cal"></tbody></table><p class="chartnote">Laser surface temperature is the selected reference. Differences are sensor minus laser reference, using the stored calibration observation. Temperature charts apply the latest paired offset for each node and sensor across the selected history. Live readings and stored samples remain raw.</p></section>
-<footer>AirQualityMonitorSystem v1.0.3 · Latest sample every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<footer>AirQualityMonitorSystem v1.0.4 · Latest sample every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -152,7 +166,7 @@ const finite=Number.isFinite, fmt=(v,d=1)=>finite(v)?v.toFixed(d):'—';
 const delta=n=>finite(n.temperature_c)&&finite(n.bmp_temperature_c)?n.bmp_temperature_c-n.temperature_c:null;
 const local=t=>t?new Date(t).toLocaleString('en-GB'):'—';
 const palette=['#55dfb2','#65b6ff','#ffbd69','#c6a5ff','#ff8e9d','#78dbe8','#d1dd72','#f5a9df'];
-const colors=new Map();let nodes=[],selected=new Set(),known=new Set(),windowKey='1h',hist=null,liveBusy=false,historyBusy=false,historyPending=false,revision=0;
+const colors=new Map();let nodes=[],selected=new Set(),known=new Set(),windowKey='60',hist=null,liveBusy=false,historyBusy=false,historyPending=false,revision=0;
 const errors={live:'',history:''};
 const label=n=>n.name||n.node_id;
 const name=id=>label(nodes.find(n=>n.node_id===id)||{node_id:id});
@@ -184,7 +198,13 @@ const chartSpecs=[
 ];
 const charts=[];
 for(const spec of chartSpecs){const card=el('article','card chart');card.append(el('h3','',spec.title));const legend=el('div','legend'),canvas=el('canvas','plot'),tip=el('div','tip');tip.hidden=true;canvas.setAttribute('aria-label',spec.title+' time series');card.append(legend,canvas,tip);$('charts').append(card);const c={spec,card,legend,canvas,tip,layout:null};charts.push(c);canvas.addEventListener('pointermove',e=>hover(c,e));canvas.addEventListener('pointerleave',()=>{tip.hidden=true});new ResizeObserver(()=>draw(c)).observe(canvas)}
-for(const k of ['15m','1h','6h','24h','7d','30d','90d']){const b=el('button',k===windowKey?'active':'',k);b.dataset.range=k;b.onclick=()=>{windowKey=k;for(const x of $('ranges').children)x.classList.toggle('active',x===b);revision++;requestHistory()};$('ranges').append(b)}
+$('range-minutes').addEventListener('change',e=>{
+ const input=e.currentTarget;
+ if(!input.checkValidity()){input.reportValidity();input.value=windowKey;return}
+ const next=String(input.valueAsNumber);
+ if(next===windowKey)return;
+ windowKey=next;revision++;requestHistory();
+});
 function offsetFor(id,key){
  const value=hist?.offsets?.[id]?.[key]?.offset_c;
  return finite(value)?value:null;
@@ -219,7 +239,7 @@ function linesFor(spec){
 function tickTime(t,span){return new Date(t).toLocaleString('en-GB',span>86400000?{day:'2-digit',month:'short'}:{hour:'2-digit',minute:'2-digit'})}
 function draw(c){const {canvas,spec,legend}=c;const w=canvas.clientWidth,h=canvas.clientHeight;if(w<1||h<1)return;const dpr=window.devicePixelRatio||1;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.font='11px system-ui';ctx.fillStyle='#8c9fb6';const lines=linesFor(spec);legend.replaceChildren();for(const l of lines){const s=el('span');const sw=el('i','swatch'+(l.dash?' dash':l.shape?' dot':''));sw.style.color=l.color;if(l.shape==='square')sw.style.borderRadius='0';s.append(sw,document.createTextNode(l.label));legend.append(s)}
  let lo=Infinity,hi=-Infinity;for(const l of lines)for(const [t,v] of l.points)if(finite(v)){lo=Math.min(lo,v);hi=Math.max(hi,v)}if(!hist||!finite(lo)){ctx.textAlign='center';ctx.fillText('No samples in selected range',w/2,h/2);c.layout=null;return}
- const pad=Math.max((hi-lo)*.1,spec.unit==='°C'?.15:spec.unit==='%'?.5:spec.unit==='hPa'?.15:1);lo-=pad;hi+=pad;const start=Date.parse(hist.start)-(hist.bucket_seconds||0)*1000,end=Date.parse(hist.end);const left=59,right=w-12,top=10,bottom=h-28;if(right<=left)return;const X=t=>left+(t-start)/(end-start)*(right-left),Y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
+ const pad=Math.max((hi-lo)*.1,spec.unit==='°C'?.15:spec.unit==='%'?.5:spec.unit==='hPa'?.15:1)/3;lo-=pad;hi+=pad;const start=Date.parse(hist.start)-(hist.bucket_seconds||0)*1000,end=Date.parse(hist.end);const left=59,right=w-12,top=10,bottom=h-28;if(right<=left)return;const X=t=>left+(t-start)/(end-start)*(right-left),Y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
  ctx.textAlign='right';ctx.textBaseline='middle';for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);ctx.strokeStyle='#26364a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillStyle='#8c9fb6';ctx.fillText(v.toFixed(spec.unit==='ppm'||spec.unit==='ppb'?0:1),left-7,y)}ctx.textAlign='left';ctx.fillText(spec.unit,2,8);ctx.textBaseline='top';const ticks=w<420?3:5;for(let i=0;i<ticks;i++){const t=start+(end-start)*i/(ticks-1);ctx.textAlign=i===0?'left':i===ticks-1?'right':'center';ctx.fillText(tickTime(t,end-start),X(t),bottom+8)}
  ctx.save();ctx.beginPath();ctx.rect(left,top,right-left,bottom-top);ctx.clip();const maxGap=(hist.bucket_seconds?hist.bucket_seconds*2.1:15)*1000;for(const l of lines){ctx.strokeStyle=l.color;ctx.fillStyle=l.color;ctx.lineWidth=1.7;ctx.setLineDash(l.dash?[5,4]:[]);if(l.shape){for(const [t,v] of l.points){if(!finite(v))continue;ctx.beginPath();if(l.shape==='square')ctx.rect(X(t)-3,Y(v)-3,6,6);else ctx.arc(X(t),Y(v),3.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#090e16';ctx.stroke()}continue}ctx.beginPath();let prev=null;for(const [t,v] of l.points){if(!finite(v)){prev=null;continue}if(prev===null||t-prev>maxGap)ctx.moveTo(X(t),Y(v));else ctx.lineTo(X(t),Y(v));prev=t}ctx.stroke();ctx.setLineDash([]);if(l.points.filter(p=>finite(p[1])).length===1){const [t,v]=l.points.find(p=>finite(p[1]));ctx.beginPath();ctx.arc(X(t),Y(v),2.5,0,Math.PI*2);ctx.fill()}}ctx.restore();c.layout={start,end,left,right,lines};
 }
@@ -227,7 +247,7 @@ function nearest(points,t){let a=0,b=points.length;while(a<b){const m=(a+b)>>1;i
 function hover(c,e){if(!c.layout){c.tip.hidden=true;return}const {start,end,left,right,lines}=c.layout;const r=c.canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<left||x>right){c.tip.hidden=true;return}const t=start+(x-left)/(right-left)*(end-start);const tolerance=Math.max((end-start)/(right-left)*8,(hist.bucket_seconds||5)*1000);const vals=[];for(const l of lines){const p=nearest(l.points,t);if(p&&finite(p[1])&&Math.abs(p[0]-t)<=tolerance)vals.push(`${l.label}: ${fmt(p[1],2)} ${c.spec.unit} (${tickTime(p[0],end-start)})`)}if(!vals.length){c.tip.hidden=true;return}c.tip.textContent=local(t)+'\n'+vals.join('\n');c.tip.hidden=false;const cr=c.card.getBoundingClientRect();c.tip.style.left=Math.max(8,Math.min(e.clientX-cr.left+10,c.card.clientWidth-c.tip.offsetWidth-8))+'px';c.tip.style.top=Math.max(8,e.clientY-cr.top-c.tip.offsetHeight-10)+'px'}
 const refDelta=(sensor,reference)=>finite(sensor)&&finite(reference)?sensor-reference:null;
 function renderHistory(){const root=$('cal');root.replaceChildren();for(const r of hist.calibration){const tr=el('tr');for(const v of [local(r.observed_at),name(r.node_id),fmt(r.raw_temperature_c,2),fmt(r.raw_bmp_temperature_c,2),fmt(r.raw_humidity_rh,1),fmt(r.laser_meter_c,2),fmt(refDelta(r.raw_temperature_c,r.laser_meter_c),2),fmt(refDelta(r.raw_bmp_temperature_c,r.laser_meter_c),2)])tr.append(el('td','',v));root.append(tr)}if(!hist.calibration.length){const tr=el('tr'),td=el('td','empty','No laser reference observations in selected range');td.colSpan=8;tr.append(td);root.append(tr)}$('cal-count').textContent=hist.calibration_truncated?'Latest 100 observations in range':hist.calibration.length+' observations';const count=hist.samples.reduce((s,r)=>s+r.sample_count,0);$('history-status').textContent=`${count.toLocaleString('en-GB')} stored samples · ${hist.bucket_seconds?'Mean / '+(hist.bucket_seconds<60?hist.bucket_seconds+' s':hist.bucket_seconds/60+' min'):'Raw samples'} · ${local(hist.start)} — ${local(hist.end)}`;for(const c of charts)draw(c)}
-async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now(),dur={'15m':900,'1h':3600,'6h':21600,'24h':86400,'7d':604800,'30d':2592000,'90d':7776000}[windowKey];hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();$('history-status').textContent='Select at least one node.';return}const q=new URLSearchParams({range:windowKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message);$('history-status').textContent='History refresh failed · displayed data may be stale.'}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
+async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now(),dur=Number(windowKey)*60;hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],offsets:{},calibration:[],bucket_seconds:0};renderHistory();$('history-status').textContent='Select at least one node.';return}const q=new URLSearchParams({range:windowKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message);$('history-status').textContent='History refresh failed · displayed data may be stale.'}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
 refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,5000);setInterval(requestHistory,15000);
 </script></body></html>'''
 
@@ -265,9 +285,10 @@ class Handler(BaseHTTPRequestHandler):
             elif url.path == '/api/history':
                 try:
                     q = parse_qs(url.query, max_num_fields=128)
-                    window = q.get('range', ['1h'])[0]
+                    window = q.get('range', ['60'])[0]
                     nodes = list(dict.fromkeys(q.get('node', [])))
-                    if window not in RANGES or any(not NODE_ID.fullmatch(n) for n in nodes):
+                    range_params(window)
+                    if any(not NODE_ID.fullmatch(n) for n in nodes):
                         raise ValueError('Invalid range or node ID')
                 except ValueError as e:
                     self.json(400, {'error': str(e)})
