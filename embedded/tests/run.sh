@@ -8,4 +8,8 @@ cc="${CC:-cc}"
 "$tmp/state"
 "$cc" -std=c99 -Wall -Wextra -Werror -pedantic hardcore/state.c hardcore/cs.c hardcore/ter.c tests/ter_test.c -o "$tmp/ter"
 "$tmp/ter"
+"$cc" -std=c99 -Wall -Wextra -Werror -pedantic hardcore/cs.c hardcore/routine.c tests/routine_test.c -o "$tmp/routine"
+"$tmp/routine"
+"$cc" -std=c99 -Wall -Wextra -Werror -pedantic -DAIGMOS_ACCESSCORE hardcore/cs.c tests/access_test.c -o "$tmp/access"
+"$tmp/access"
 printf '%s\n' 'Host tests passed'

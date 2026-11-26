@@ -12,6 +12,9 @@ int aig_cs_find(const aig_cs *cs,const char *name,size_t *index) {
 }
 int aig_cs_run(const aig_cs *cs,size_t index,const aig_value *args,size_t argc) {
     if (!cs || !cs->commands || index>=cs->count || !cs->commands[index].call || (argc && !args)) return AIG_CS_INVALID;
+#ifdef AIGMOS_ACCESSCORE
+    if (!cs->authorize || cs->authorize(cs->access_context,cs->commands[index].name,args,argc)!=1) return AIG_CS_DENIED;
+#endif
     return cs->commands[index].call(cs->commands[index].context,args,argc);
 }
 int aig_cs_execute(const aig_cs *cs,const char *name,const aig_value *args,size_t argc) {

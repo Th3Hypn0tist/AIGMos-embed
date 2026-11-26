@@ -15,8 +15,8 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 - [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo ja namespace-validointi avoinna.)
 - [ ] Command Surface ja Command Registry. (Natiivin rekisterin ja dispatchin ensimmäinen toteutus lisätty; host-testi ja AC avoinna.)
 - [ ] Trigger, Event, Runner ja TER-suoritusketju. (Ensimmäinen toteutus ja integraatiotesti lisätty; testiajo ja semantiikan validointi avoinna.)
-- [ ] Rutiinien suoritus.
-- [ ] AccessCore-tuen valinnainen sisällyttäminen.
+- [ ] Rutiinien suoritus. (Nimetyt &-rutiinit, järjestetty suoritus, virhekatkaisu ja rekursiosuoja lisätty; host-testi ajamatta.)
+- [ ] AccessCore-tuen valinnainen sisällyttäminen. (AIGMOS_ACCESSCORE-build flag ja fail-closed CS-valtuutusrajapinta lisätty; ei vielä varsinaista AccessCore-integraatiota; testi ajamatta.)
 - [ ] Muistinkäytön minimointi ja suorituskykytestit.
 
 ```text
