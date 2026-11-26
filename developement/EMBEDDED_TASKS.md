@@ -7,7 +7,7 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 - [ ] Koneellisesti luettava SSOT ja AIGMos-yhteensopivat rakenteet. (Alustava `embedded/structure.json`.)
 - [x] Natiivin C/C++-toteutuksen rajaus (C99 baseline, C++ adapter ABI).
 - [ ] HardCore-, Core-, Adapter- ja UserModule-erottelu.
-- [ ] Build-kohtainen ominaisuuksien karsinta.
+- [ ] Build-kohtainen ominaisuuksien karsinta. (Valittujen runtime-lähteiden build plan ja object compilation lisätty; linkitys ja kohdealustat avoinna.)
 - [ ] Nollariippuvuuden automaattinen validointi. (Include-rajojen tarkistin lisätty; ajo ja linkitysauditointi avoinna.)
 - [ ] Alustariippumattomuuden validointi.
 
@@ -97,13 +97,13 @@ Module Registry
 - [ ] Verkkoyhteyden validointi.
 
 ## 8. Composition Engine
-- [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta. (Platform/board ja HardCore feature resolver lisätty; Core-valinta avoinna.)
+- [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta. (Platform/board ja HardCore feature resolver lisätty; Core-valinta lisätty build plan -tasolla.)
 - [ ] Input-, Output-, Communication- ja UserModule-valinnat.
-- [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen. (C99-taulugeneraattori lisätty; testiajo ja täydet moduulibindaukset avoinna.)
+- [ ] State-rakenteen, Command Registryn ja TER-konfiguraation muodostaminen. (C99-taulugeneraattori lisätty; tyypitetyt komentoargumentit lisätty; testiajo ja täydet moduulibindaukset avoinna.)
 - [ ] Pin bindings -generointi.
 - [ ] Riippuvuuksien resolvointi ja komposition validointi. (Natiivien State/CS/TER-taulujen validointi lisätty; host-testi ajamatta.)
 - [ ] Firmware-lähdekoodin generointi. (Ensimmäinen State/CS/TER-taulujen generointi; ei vielä kokonainen firmware.)
-- [ ] Build manifest ja komposition versionointi. (Deterministinen draft manifest ja SHA-256 lisätty; build-ready manifest avoinna.)
+- [ ] Build manifest ja komposition versionointi. (Deterministinen draft manifest ja SHA-256 lisätty; lähde- ja header-hashit sekä generated code -hash lisätty build plan -tasolla; build-ready manifest avoinna.)
 
 ```text
 Composition
@@ -125,7 +125,7 @@ Composition
 
 ## 9. Deployment
 - [ ] Alustakohtainen build ja toolchain-tunnistus.
-- [ ] Build-lokitus.
+- [ ] Build-lokitus. (Host object compilation -lokitus lisätty, testiajo avoinna.)
 - [ ] Flashaus ja Push to node.
 - [ ] Flashauksen, firmwareversion ja komposition verifiointi.
 - [ ] Sensorien toiminnan ja verkkoyhteyden verifiointi.

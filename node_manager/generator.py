@@ -1,5 +1,6 @@
 """Generate native tables from a resolved composition. No target SDK required."""
 import json
+import math
 import pathlib
 import re
 from .composition import resolve
@@ -13,6 +14,17 @@ def literal(value):
     if not isinstance(value,str) or not value.isascii() or any(ord(c)<32 for c in value):
         raise ValueError("invalid table string")
     return json.dumps(value)
+
+def value_initializer(value):
+    if value is None: return "{AIG_NULL,{0}}"
+    if type(value) is bool: return "{AIG_BOOL,{.boolean="+str(int(value))+"}}"
+    if type(value) is int:
+        if not -(2**63)<=value<2**63: raise ValueError("integer argument out of range")
+        token="(-9223372036854775807LL-1LL)" if value==-(2**63) else str(value)+"LL"
+        return "{AIG_INT,{.integer="+token+"}}"
+    if type(value) is float and math.isfinite(value):
+        return "{AIG_REAL,{.real="+repr(value)+"}}"
+    raise ValueError("unsupported command argument")
 
 def generate(definition):
     m=resolve(definition)
@@ -58,9 +70,16 @@ def generate(definition):
     trigger_indices={name:i for i,name in enumerate(triggers)}
     def command_list(prefix, key, entry):
         rows=[]
-        for name in entry["commands"]:
+        for index, command in enumerate(entry["commands"]):
+            if isinstance(command,str):
+                name,args=command,[]
+            elif isinstance(command,dict) and set(command)<={"command","args"}:
+                name,args=command["command"],command.get("args",[])
+            else: raise ValueError("invalid command entry")
             if name not in indices: raise ValueError("unknown command: "+name)
-            rows.append("{"+str(indices[name])+",0,0}")
+            if not isinstance(args,list): raise ValueError("args must be a list")
+            ptr=array("aig_value",f"{prefix}_{key}_args_{index}",[value_initializer(v) for v in args],True)
+            rows.append("{"+str(indices[name])+","+ptr+","+str(len(args))+"}")
         return array("aig_ter_command",prefix+"_"+key,rows,True),len(rows)
     event_rows=[]
     for key,e in events.items():

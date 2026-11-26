@@ -49,6 +49,7 @@ def resolve(definition):
         raise ValueError("AccessCore hook requires CS")
     manifest = {"version": 1, "platform": platform, "board": board_path,
                 "features": [f for f in known if f in selected], "flags": sorted(flags),
+                "core_features": definition.get("core_features", []),
                 "modules": instances, "buses": definition["buses"],
                 "inputs": inputs, "commands": commands,
                 "application_commands": definition.get("application_commands", []),
