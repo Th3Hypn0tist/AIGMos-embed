@@ -169,9 +169,9 @@ DISCONNECTED
 - [x] Nykyisen tietokantaskeeman tarkastus.
 - [x] OSC IN -backendin ensimmäinen toteutus (testaamatta).
 - [x] Psycopg-integraation ensimmäinen toteutus (testaamatta).
-- [ ] OSC-moduulin ja nykyisten sensorimoduulien sovittaminen AIGMos Embedded -rakenteeseen.
+- [ ] OSC-moduulin ja nykyisten sensorimoduulien sovittaminen AIGMos Embedded -rakenteeseen. (BMP180 ja DHT11 natiivit C99-ajurit sekä #I-kirjoitus lisätty; adapteri, OSC ja testiajo avoinna.)
 - [ ] AQM-kompositiomääritys. (ESP8266 BMP180+DHT11 -luonnos lisätty; OSC ja TER vielä avoinna.)
-- [ ] Mittausten kirjoittaminen Stateen #I-rakenteella.
+- [ ] Mittausten kirjoittaminen Stateen #I-rakenteella. (BMP180/DHT11 sample-rajapinnat lisätty, virheessä NULL; integraatiotestaus avoinna.)
 - [ ] TER-pohjainen mittaus- ja lähetysrutiini, 5 s.
 - [ ] Kalibrointitoiminnallisuus.
 - [ ] Expose-yhteensopiva Python OSC IN → #OSC → AQM DB-käsittely; verifioi 1.9 Expose -sopimus.
@@ -180,7 +180,7 @@ DISCONNECTED
 - [ ] Nykyisen dashboardin yhteensopivuuden verifiointi.
 
 ## 12. Integraatiotestaus
-- [ ] ESP8266 – BMP180 + DHT11.
+- [ ] ESP8266 – BMP180 + DHT11. (Ajurit ja host-vektoritesti lisätty; ajo ja laitetestaus avoinna.)
 - [ ] Tyhjän noden tunnistus ja probe-firmware.
 - [ ] Pin Mapper ja komposition muodostaminen.
 - [ ] Push to node.

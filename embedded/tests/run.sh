@@ -14,4 +14,6 @@ cc="${CC:-cc}"
 "$tmp/access"
 "$cc" -std=c99 -Wall -Wextra -Werror -pedantic hardcore/state.c hardcore/input.c core/validate.c tests/validate_test.c -o "$tmp/validate"
 "$tmp/validate"
+"$cc" -std=c99 -Wall -Wextra -Werror -pedantic hardcore/state.c hardcore/input.c modules/bmp180/bmp180.c modules/dht11/dht11.c tests/sensor_test.c -o "$tmp/sensors"
+"$tmp/sensors"
 printf '%s\n' 'Host tests passed'

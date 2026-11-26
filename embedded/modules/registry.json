@@ -26,8 +26,14 @@
         "register": 208,
         "id": 85
       },
-      "status": "metadata_only",
-      "namespace": "#I"
+      "status": "driver_implemented_unverified",
+      "namespace": "#I",
+      "sources": [
+        "embedded/modules/bmp180/bmp180.c"
+      ],
+      "headers": [
+        "embedded/modules/bmp180/bmp180.h"
+      ]
     },
     "BMP280": {
       "kind": "input",
@@ -77,8 +83,14 @@
       "commands": [],
       "dependencies": [],
       "probe": null,
-      "status": "metadata_only",
-      "namespace": "#I"
+      "status": "driver_implemented_unverified",
+      "namespace": "#I",
+      "sources": [
+        "embedded/modules/dht11/dht11.c"
+      ],
+      "headers": [
+        "embedded/modules/dht11/dht11.h"
+      ]
     },
     "HDC1080": {
       "kind": "input",
