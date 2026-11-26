@@ -13,8 +13,8 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 
 ## 2. HardCore
 - [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo ja namespace-validointi avoinna.)
-- [ ] Command Surface ja Command Registry.
-- [ ] Trigger, Event, Runner ja TER-suoritusketju.
+- [ ] Command Surface ja Command Registry. (Natiivin rekisterin ja dispatchin ensimmäinen toteutus lisätty; host-testi ja AC avoinna.)
+- [ ] Trigger, Event, Runner ja TER-suoritusketju. (Ensimmäinen toteutus ja integraatiotesti lisätty; testiajo ja semantiikan validointi avoinna.)
 - [ ] Rutiinien suoritus.
 - [ ] AccessCore-tuen valinnainen sisällyttäminen.
 - [ ] Muistinkäytön minimointi ja suorituskykytestit.
