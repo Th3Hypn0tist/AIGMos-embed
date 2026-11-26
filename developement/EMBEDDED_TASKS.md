@@ -127,8 +127,8 @@ Composition
 
 ## 9. Deployment
 - [ ] Alustakohtainen build ja toolchain-tunnistus.
-- [ ] Build-lokitus. (Host object compilation -lokitus lisätty, testiajo avoinna.)
-- [ ] Flashaus ja Push to node.
+- [ ] Build-lokitus. (Valittujen moduulilähteiden host-käännös ja lokin näkymä lisätty.) (Host object compilation -lokitus lisätty, testiajo avoinna.)
+- [ ] Flashaus ja Push to node. (Eksplisiittinen Push-valikko ja fail-closed esto lisätty; flash-adapteri avoinna.)
 - [ ] Flashauksen, firmwareversion ja komposition verifiointi.
 - [ ] Sensorien toiminnan ja verkkoyhteyden verifiointi.
 - [ ] Virhetilanteista palautuminen.
@@ -163,7 +163,7 @@ DISCONNECTED
 - [ ] Nodes-, Hardware- ja Module Manager -näkymät. (Node-listaus, USB-inventory ja rekisterien katselu lisätty.)
 - [ ] Pin Mapper ja Network Configuration. (IP-moodin muutos ja komposition JSON-import lisätty; visuaalinen pin mapper avoinna.)
 - [ ] State-, Command- ja TER Configuration. (Menu 15: johdettu State/Command-näkymä, JSON-osioeditori, TER-luonnoksen rakenteellinen validointi; varsinaiset State- ja TER-editorit sekä runtime-validointi avoinna.)
-- [ ] Composition-, Deployment- ja Monitor-näkymät.
+- [ ] Composition-, Deployment- ja Monitor-näkymät. (Menu 16: build plan, host compile, loki, stale-status, Push estetty; target build ja live monitor avoinna.)
 - [ ] Command Surface -integraatio.
 
 ## 11. AQM – ensimmäinen referenssisovellus

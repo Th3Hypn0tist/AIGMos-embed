@@ -14,7 +14,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Network-näkymä: DHCP/auto/static, Wi-Fi-konfiguraatio, USB- ja verkkoinventaarion yhdistys, osoitekonfliktit ja saavutettavuus; tunnukset paikallisesti eikä Gitiin. (Network panel, erillinen credential-tiedosto, neighbor cache, ICMP ja OSC-kohde lisätty; testit ja target-integraatio avoinna.)
 - [ ] Säilytä C6:n .50-varaus; ESP8266 .51; auto 50 + node_index. Älä muuta C6:n firmwarea. (Uudet rekisterit varaavat index 0:n C6:lle; vanhojen rekisterien migraatio ja todellinen C6-MAC vahvistamatta.)
 - [ ] State-, Commands-, Trigger-, Event-, Runner- ja Composition-näkymät sekä versioiden valinta/palautus. (Composition Manager -näkymä, JSON-osioeditori, luonnosvalidointi ja historia/palautus lisätty; erilliset rekisterieditorit, runtime-validointi ja testiajo avoinna.)
-- [ ] Build/deployment/monitor-näkymät ja CS-integraatio; estä Push to node kun build ei ole valmis.
+- [ ] Build/deployment/monitor-näkymät ja CS-integraatio; estä Push to node kun build ei ole valmis. (Build/deployment-valikko, host compile, plan-hash/stale-status ja fail-closed Push lisätty; target/monitor/CS ja testiajo avoinna.)
 
 ## P1 – ESP8266:n ajettava kompositio
 - [ ] Ulkoinen ESP8266 SDK -adapteri: GPIO, I²C, monotonic timer/delay, UART, Wi-Fi, UDP; flash-rajapinnat tarpeen mukaan.
@@ -24,7 +24,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Muuttujaviittaukset, State-viittaukset ja rakenteinen data CS:n argumentteina; säilytä geneerinen State ja erilliset #I / #OSC.
 - [ ] Sensorien read-komentojen rekisteröinti ja moduulikohtaiset kontekstit; virheessä NULL.
 - [ ] Geneerinen osc.out, vastaanottajan resolvointi ja OSC-serialisointi; varmista yhteensopivuus nykyisen AQM wire-SSOT:n kanssa. Ei PostgreSQL-ajuria nodeen.
-- [ ] Moduuli- ja adapterilähteiden valinta, pin bindings, init, entry point, scheduler ja generoidut rekisterit.
+- [ ] Moduuli- ja adapterilähteiden valinta, pin bindings, init, entry point, scheduler ja generoidut rekisterit. (Valittujen moduulien lähteet/headerit mukana host build planissa.)
 - [ ] Build-kohtaiset HardCore/Core/UM-valinnat, lähdehashit, käännös, linkitys ja flashattava artifact; build_ready vain onnistuneen todellisen buildin jälkeen.
 - [ ] AQM-komposition pending_ter muutetaan ajettavaksi; ei sovelluskohtaista logiikkaa HardCoressa tai Node Managerissa.
 - [ ] Eksplisiittinen Push to node, build-log, flash-verifiointi, komposition tunniste, palautus ja aktiivisen version päivitys vasta hyväksytyn verifioinnin jälkeen.

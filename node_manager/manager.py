@@ -137,3 +137,16 @@ class Manager:
 
     def prepare(self,mac,output):
         return prepare(self.selected(mac),pathlib.Path(output))
+
+    def compile_host(self,mac,output):
+        from .build import compile_objects
+        return compile_objects(self.selected(mac),output)
+
+    def deployment_status(self,mac,output):
+        from .deployment import inspect
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return dict(inspect(self.selected(mac),output),selected=node.get("selected"),active=node.get("active"))
+
+    def push(self,mac,output):
+        from .deployment import push
+        return push(self.selected(mac),output)

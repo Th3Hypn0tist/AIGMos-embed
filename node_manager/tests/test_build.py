@@ -23,9 +23,11 @@ class BuildTest(unittest.TestCase):
         self.assertIn("embedded/core/validate.c",manifest["runtime_sources"])
         self.assertIn("AIG_INT,{.integer=-2LL}",code)
         self.assertFalse(manifest["build_ready"])
+        self.assertIn("embedded/modules/bmp180/bmp180.c",manifest["module_sources"])
+        self.assertIn("embedded/modules/dht11/dht11.c",manifest["module_sources"])
         self.assertEqual((manifest,code),plan(d))
     @unittest.skipUnless(shutil.which("cc"),"host compiler missing")
     def test_compile(self):
         with tempfile.TemporaryDirectory() as folder:
             result=compile_objects(definition(),folder)
-            self.assertEqual(len(list(Path(folder).glob("*.o"))),len(result["runtime_sources"])+1)
+            self.assertEqual(len(list(Path(folder).glob("*.o"))),len(result["runtime_sources"])+len(result["module_sources"])+1)

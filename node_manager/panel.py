@@ -15,6 +15,7 @@ def run(manager):
         print("5 Configure / import  6 Selected composition  7 Prepare build")
         print("8 Module registry  9 Board registry  10 Identify MCU  11 Toolchain  0 Exit")
         print("12 Prepare probe  13 Import probe observations  14 Hardware / Pin Mapper  15 Composition Manager")
+        print("16 Build / Deployment Manager")
         try:
             action=input("> ").strip()
             if action=="0": return
@@ -58,6 +59,9 @@ def run(manager):
             elif action=="15":
                 from .composition_panel import run as composition_run
                 composition_run(manager,input("MAC: "),show)
+            elif action=="16":
+                from .deployment_panel import run as deployment_run
+                deployment_run(manager,input("MAC: "),show)
             elif action in ("8","9"):
                 from .composition import load
                 show(load("embedded/modules/registry.json" if action=="8" else "embedded/adapters/registry.json"))

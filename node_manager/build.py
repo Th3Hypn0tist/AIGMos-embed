@@ -25,13 +25,20 @@ def plan(definition):
         if not (ROOT/source).is_file():
             raise ValueError("missing Core source: "+source)
         sources.append(source)
+    modules=json.loads((ROOT/"embedded/modules/registry.json").read_text())["modules"]
+    module_sources=sorted({p for instance in manifest["modules"] for p in modules[instance["module"]].get("sources",[])})
+    module_headers=sorted({p for instance in manifest["modules"] for p in modules[instance["module"]].get("headers",[])})
+    for source in module_sources+module_headers:
+        if not (ROOT/source).is_file(): raise ValueError("missing module file: "+source)
     code=generate(definition)
-    hashes={source:hashlib.sha256((ROOT/source).read_bytes()).hexdigest() for source in sources}
+    hashes={source:hashlib.sha256((ROOT/source).read_bytes()).hexdigest() for source in sources+module_sources}
     headers={}
     for folder in ("embedded/hardcore","embedded/core"):
         for header in sorted((ROOT/folder).glob("*.h")):
             headers[str(header.relative_to(ROOT))]=hashlib.sha256(header.read_bytes()).hexdigest()
-    result=dict(manifest,core_features=core,runtime_sources=sources,
+    for header in module_headers+["embedded/adapters/platform.h"]:
+        headers[header]=hashlib.sha256((ROOT/header).read_bytes()).hexdigest()
+    result=dict(manifest,core_features=core,runtime_sources=sources,module_sources=module_sources,
                 source_hashes=hashes,header_hashes=headers,
                 generated_sha256=hashlib.sha256(code.encode()).hexdigest(),
                 build_ready=False,missing=["platform adapter","module implementations","target entry point","target toolchain integration"])
@@ -52,7 +59,7 @@ def compile_objects(definition,output,cc="cc"):
     output=pathlib.Path(output).resolve()
     manifest=prepare(definition,output)
     log=[]
-    sources=[ROOT/p for p in manifest["runtime_sources"]]+[output/"composition.c"]
+    sources=[ROOT/p for p in manifest["runtime_sources"]+manifest["module_sources"]]+[output/"composition.c"]
     for index,source in enumerate(sources):
         target=output/f"{index}_{source.stem}.o"
         args=[cc,"-std=c99","-Os","-Wall","-Wextra","-Werror","-pedantic",
