@@ -32,7 +32,7 @@ python3 -m node_manager
 The current interface is a temporary terminal menu. It supports device inventory,
 explicit esptool 4.x identification, node registration, probe preparation/import,
 hardware and pin editing, network configuration, composition history and host
-build preparation. External tools are not bundled. Push is blocked until a
+build preparation. External tools are not bundled yet. Arduino Core is the preferred external adapter backend. The planned Open Core Full Package includes a local locked toolchain for offline provisioning; the initial provisioning code is documented in [toolchains](toolchains/README.md). Push is blocked until a
 target builder and verification adapter exist. See [Node Manager](node_manager/README.md).
 
 ## Status

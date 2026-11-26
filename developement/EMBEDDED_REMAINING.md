@@ -8,6 +8,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] USB-porttien live-listaus ja laitteen valinta. (Valinta ja uudelleenlistaus Identify-valikossa lisätty; jatkuva päivitys avoinna.)
 - [ ] MCU-, MAC- ja flash-kokoluokan tunnistus bootloaderin kautta ilman firmwarekirjoitusta; toolchain-tunnistus. (Esptool 4.x -rajapinta ja PATH-tunnistus lisätty, mock-testit ja fyysinen testi ajamatta.)
 - [ ] Pysyvä node-identiteetti, laiteinventaario ja valittu vs aktiivinen kompositio. (Tunnistetun MAC:n ja flash-koon tallennus lisätty; aktiivinen versio vasta deployment-verifioinnissa.)
+- [ ] Paikallinen lukittu Arduino CLI/Core/toolchain ennen probe-buildia. (Manifesti, paikallinen config, eksplisiittinen install/status ja SHA-256-inventory lisätty; CLI-bootstrap, transitiiviset lukot, verifiointi ja testit avoinna.)
 - [ ] ESP8266:n probe-firmwaren build ja eksplisiittinen Detect hardware; ei automaattista flashausta. Huomioi olemassa oleva firmware ja palautus. (Probe plan ja C-taulut generoidaan; SDK-build/flash puuttuvat.)
 - [ ] Sallitut I²C-probet ja GPIO-inventaario; epävarmat sensorit merkitään ehdokkaiksi, ei varmoiksi havainnoiksi. (I2C scan -primitiivi ja inventory JSON-import lisätty; GPIO-luku/serial-report ja testit avoinna.)
 - [ ] Hardware-, Modules- ja Pin Mapper -näkymät: lisää/poista/vaihda, pinout, capabilities, reserved/strap, jaetut väylät, osoite- ja pinnikonfliktit, live-testi. (Tekstipohjainen editori, ehdokkaat, pin-taulukko ja versionoitu validointi lisätty; live-testi ja lopullinen Panel avoinna.)
@@ -40,6 +41,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Pitkäkestoinen testi, verkkokatkos, uudelleenkäynnistys, puuttuva sensori, muistinkäyttö ja ajoitus. Hyväksy ESP8266 ennen C6-migraatiota.
 
 ## P3 – Yleistys ja viimeistely
+- [ ] Source Package ja Full Package: host-kohtaiset binäärit, vastaavat lähdekoodit, lisenssit, uudelleenlinkitysaineisto, checksum-verifiointi, paikallinen esptool ja offline build/provisiointi. Open Core; kaupalliset laajennukset erikseen.
 - [ ] ESP32-C6-adapteri ja nykyiset BMP280, RH/T (HDC1080/Si7021 tunnistus), CCS811; varmista todelliset pinnit ja sensorit ennen migraatiota.
 - [ ] C6:n provisiointi vasta P2-hyväksynnän jälkeen; ESP32-S3-adapterivalmius, ei pakollista toteutusta.
 - [ ] Muut alustarajapinnat ADC/PWM/SPI/flash ja laajennettava Input/Output/Communication/UserModule-rekisteri.

@@ -24,3 +24,5 @@ Menu 15 displays derived State inputs and module commands, edits feature/variabl
 Menu 16 prepares a build plan, compiles selected runtime and module sources into host objects, shows logs and compares the saved plan against the selected composition and current source hashes. Host objects are not firmware. Push is deliberately blocked until a target builder and verification adapter exist. Use a dedicated build directory; build logs describe past compilation, not proof of artifact integrity.
 
 The optional ESP8266 adapter source is in embedded/adapters/esp8266; target build and network provisioning remain pending.
+
+Local Arduino CLI/Core provisioning baseline: see [toolchains](../toolchains/README.md). Existing esptool identification still uses PATH; migration to the packaged toolchain is pending.

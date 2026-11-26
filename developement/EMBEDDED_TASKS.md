@@ -46,6 +46,9 @@ Sensor
 - [ ] Alustakohtaiset toolchainit. (PATH-tunnistus lisätty; SDK-versioiden ja buildin validointi avoinna.)
 - [ ] Piirilevykohtaiset pinout-määritykset, pin capabilities ja rajoitukset. (D1 mini -metadata lisätty, verifioimatta.)
 
+- [ ] Paketin oma Arduino CLI/Core/toolchain: lukitut versiot, paikalliset hakemistot, eksplisiittinen asennus, ei järjestelmä-CLI-fallbackia. (Ensimmäinen manifesti ja Python-asennusrajapinta lisätty; CLI-bootstrap ja testaus avoinna.)
+- [ ] Source Package ja offline Full Package: binäärit, transitiiviset versionlukot, SHA-256-verifiointi, vastaavat lähdekoodit, lisenssit ja uudelleenlinkitysaineistot; alustakohtainen jakelu ja offline-hyväksyntä.
+
 ## 4. Module Registry
 - [ ] Yhteinen moduulirakenne. (Ensimmäinen koneellisesti luettava sensorirekisteri lisätty.)
 - [ ] Tunnistusfunktiot, liityntävaatimukset, pin bindings.
@@ -206,7 +209,7 @@ DISCONNECTED
 |---|---|
 | AIGMos | 0 ulkoista riippuvuutta |
 | HardCore ja Core | Alustariippumattomat |
-| Arduino | Ei pakollinen |
+| Arduino | Ensisijainen ulkoinen adapteri, ei runtime-riippuvuus |
 | Valmistajien SDK:t | Ulkoisissa adaptereissa |
 | UserModules | Riippuvuudet sallittu |
 | Input | Input Module → State → moduulin namespace (#I / #OSC) |

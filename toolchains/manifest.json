@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "policy": "local-only",
+  "host": "linux-x86_64",
+  "arduino_cli": {
+    "version": "1.2.2",
+    "path": "bin/arduino-cli"
+  },
+  "cores": [
+    {
+      "id": "esp8266:esp8266",
+      "version": "3.1.2",
+      "index": "https://arduino.esp8266.com/stable/package_esp8266com_index.json"
+    },
+    {
+      "id": "esp32:esp32",
+      "version": "3.3.0",
+      "index": "https://espressif.github.io/arduino-esp32/package_esp32_index.json"
+    }
+  ],
+  "release_ready": false
+}
