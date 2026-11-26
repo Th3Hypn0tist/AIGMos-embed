@@ -18,6 +18,9 @@
       "dependencies": [],
       "features": [
         "validate"
+      ],
+      "planned_features": [
+        "expression"
       ]
     }
   },
@@ -28,14 +31,14 @@
     "applications": "applications"
   },
   "input": {
-    "namespace": "#I",
+    "namespaces": {
+      "physical": "#I",
+      "osc": "#OSC"
+    },
+    "namespace_owner": "module",
     "route": [
       "input_module",
-      "state",
-      "trigger",
-      "event",
-      "runner",
-      "command"
+      "state"
     ]
   },
   "output": {
@@ -50,6 +53,38 @@
     "features": "compile_time",
     "optional_flags": {
       "AIGMOS_ACCESSCORE": "cs_authorization_hook"
+    }
+  },
+  "registries": {
+    "trigger": {
+      "fields": [
+        "condition",
+        "state"
+      ],
+      "state": [
+        0,
+        1
+      ]
+    },
+    "event": {
+      "fields": [
+        "trigger",
+        "commands"
+      ],
+      "state_owner": "trigger"
+    },
+    "runner": {
+      "fields": [
+        "state",
+        "commands"
+      ]
+    },
+    "expression": {
+      "fields": [
+        "expression"
+      ],
+      "independent_of": "ter",
+      "status": "planned"
     }
   }
 }

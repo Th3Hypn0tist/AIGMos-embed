@@ -26,7 +26,8 @@
         "register": 208,
         "id": 85
       },
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     },
     "BMP280": {
       "kind": "input",
@@ -54,7 +55,8 @@
         "register": 208,
         "id": 88
       },
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     },
     "DHT11": {
       "kind": "input",
@@ -75,7 +77,8 @@
       "commands": [],
       "dependencies": [],
       "probe": null,
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     },
     "HDC1080": {
       "kind": "input",
@@ -99,7 +102,8 @@
       "commands": [],
       "dependencies": [],
       "probe": null,
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     },
     "Si7021": {
       "kind": "input",
@@ -123,7 +127,8 @@
       "commands": [],
       "dependencies": [],
       "probe": null,
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     },
     "CCS811": {
       "kind": "input",
@@ -151,7 +156,8 @@
         "register": 32,
         "id": 129
       },
-      "status": "metadata_only"
+      "status": "metadata_only",
+      "namespace": "#I"
     }
   }
 }

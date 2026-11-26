@@ -14,7 +14,9 @@ Tavoite: natiivi alustariippumaton AIGMos-toteutus mikrokontrollereille. AQM on 
 ## 2. HardCore
 - [ ] State ja #I-namespace. (Ensimmäinen C99-toteutus ja host-testi lisätty; testiajo avoinna; #I-kirjoitusrajapinta lisätty.)
 - [ ] Command Surface ja Command Registry. (Natiivin rekisterin ja dispatchin ensimmäinen toteutus lisätty; host-testi ja AC avoinna.)
-- [ ] Trigger, Event, Runner ja TER-suoritusketju. (Ensimmäinen toteutus ja integraatiotesti lisätty; testiajo ja semantiikan validointi avoinna.)
+- [ ] Trigger, Event, Runner ja TER-suoritusketju. (Korjattu erillisiin rekistereihin: Trigger condition/state, Event trigger/commands, Runner state/commands; host-testit päivitetty, ajo avoinna.)
+- [ ] TER:n condition-semantiiikka, aktivointi ja resetointi vahvistettava AIGMos 1.9:n kanssa.
+- [ ] Valinnainen ExpressionEngine ja Expression Registry; Expression Condition != Trigger Condition, ei TER-riippuvuutta. Tarkasta 1.9-syntaksi ennen toteutusta.
 - [ ] Rutiinien suoritus. (Nimetyt &-rutiinit, järjestetty suoritus, virhekatkaisu ja rekursiosuoja lisätty; host-testi ajamatta.)
 - [ ] AccessCore-tuen valinnainen sisällyttäminen. (AIGMOS_ACCESSCORE-build flag ja fail-closed CS-valtuutusrajapinta lisätty; ei vielä varsinaista AccessCore-integraatiota; testi ajamatta.)
 - [ ] Muistinkäytön minimointi ja suorituskykytestit. (Host sizeof -profilointityökalu lisätty; ajo ja kohdealustamittaukset avoinna.)
@@ -45,7 +47,7 @@ Sensor
 ## 4. Module Registry
 - [ ] Yhteinen moduulirakenne. (Ensimmäinen koneellisesti luettava sensorirekisteri lisätty.)
 - [ ] Tunnistusfunktiot, liityntävaatimukset, pin bindings.
-- [ ] Input- ja Command-määritykset.
+- [ ] Input- ja Command-määritykset. (Namespace moduulikohtainen, #I fyysisille ja #OSC OSC IN:lle.)
 - [ ] Moduulikohtaiset konfiguraatiot.
 - [ ] Alustayhteensopivuus, riippuvuudet ja validointi.
 
@@ -172,6 +174,8 @@ DISCONNECTED
 - [ ] Mittausten kirjoittaminen Stateen #I-rakenteella.
 - [ ] TER-pohjainen mittaus- ja lähetysrutiini, 5 s.
 - [ ] Kalibrointitoiminnallisuus.
+- [ ] Expose-yhteensopiva Python OSC IN → #OSC → AQM DB-käsittely; verifioi 1.9 Expose -sopimus.
+- [ ] Säilytä lasermittaus, kalibrointi, mittausdata, DB-funktiot ja dashboard; vain node→backend-protokolla muuttuu.
 - [ ] Backendin integraatiotestaus.
 - [ ] Nykyisen dashboardin yhteensopivuuden verifiointi.
 
@@ -203,9 +207,11 @@ DISCONNECTED
 | Arduino | Ei pakollinen |
 | Valmistajien SDK:t | Ulkoisissa adaptereissa |
 | UserModules | Riippuvuudet sallittu |
-| Input | Input Module → State → #I |
+| Input | Input Module → State → moduulin namespace (#I / #OSC) |
 | Output | Command → Output Module |
-| Suoritusmekanismi | TER |
+| Suoritusmekanismi | TER, riippumaton ExpressionEnginestä |
+| Event | Trigger reference/state + Commands; ei omaa statea |
+| Expose | OSC IN → #OSC; AQM DB-käsittely erillinen |
 | SSOT | Koneellisesti luettava rakenne |
 | Firmware | Komposition build-artifact |
 | TUI | AIGMos Panel, johdettu LMTS:stä |

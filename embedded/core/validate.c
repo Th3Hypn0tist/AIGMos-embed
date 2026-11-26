@@ -3,11 +3,24 @@ static int same(const char *a,const char *b) {
     while (*a && *a==*b) { ++a; ++b; }
     return *a==*b;
 }
+static int valid_commands(const aig_cs *cs,const aig_ter_command *list,size_t count) {
+    size_t i,j;
+    if (count && !list) return 0;
+    for (i=0;i<count;++i) {
+        if (list[i].command>=cs->count || (list[i].argc && !list[i].args)) return 0;
+        for (j=0;j<list[i].argc;++j) {
+            const aig_value *v=&list[i].args[j];
+            if (v->type<AIG_NULL || v->type>AIG_REAL ||
+                (v->type==AIG_BOOL && v->as.boolean>1)) return 0;
+        }
+    }
+    return 1;
+}
 int aig_validate(const aig_state *s,const aig_ter *t) {
-    size_t i,j,k;
+    size_t i,j;
     if (!s || !t || !t->cs || (s->count && !s->slots) ||
         (t->trigger_count && !t->triggers) ||
-        (t->event_count && (!t->events || !t->routes)) ||
+        (t->event_count && !t->events) || (t->runner_count && !t->runners) ||
         (t->cs->count && !t->cs->commands)) return -1;
 #ifdef AIGMOS_ACCESSCORE
     if (!t->cs->authorize) return -1;
@@ -24,23 +37,15 @@ int aig_validate(const aig_state *s,const aig_ter *t) {
         if (!c->name || !*c->name || !c->call) return -3;
         for (j=0;j<i;++j) if (same(c->name,t->cs->commands[j].name)) return -3;
     }
-    for (i=0;i<t->trigger_count;++i) {
-        const aig_trigger *tr=&t->triggers[i];
-        if (tr->slot>=s->count || (tr->count && !tr->events)) return -4;
-        for (j=0;j<tr->count;++j) if (tr->events[j]>=t->event_count) return -4;
-    }
+    for (i=0;i<t->trigger_count;++i)
+        if (!t->triggers[i].condition || t->triggers[i].state>1) return -4;
     for (i=0;i<t->event_count;++i) {
-        const aig_event_route *r=&t->routes[i];
-        if (t->events[i].pending>1 || (r->count && !r->runners)) return -5;
-        for (j=0;j<r->count;++j) {
-            const aig_runner *run=&r->runners[j];
-            if (run->command>=t->cs->count || (run->argc && !run->args)) return -5;
-            for (k=0;k<run->argc;++k) {
-                const aig_value *v=&run->args[k];
-                if (v->type<AIG_NULL || v->type>AIG_REAL ||
-                    (v->type==AIG_BOOL && v->as.boolean>1)) return -5;
-            }
-        }
+        const aig_event *e=&t->events[i];
+        if (e->trigger>=t->trigger_count || !valid_commands(t->cs,e->commands,e->count)) return -5;
+    }
+    for (i=0;i<t->runner_count;++i) {
+        const aig_runner *r=&t->runners[i];
+        if (r->state>1 || !valid_commands(t->cs,r->commands,r->count)) return -6;
     }
     return 0;
 }

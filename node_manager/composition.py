@@ -27,7 +27,7 @@ def resolve(definition):
             raise ValueError("invalid module identifier")
         spec = registry["modules"][instance["module"]]
         for field in spec["inputs"]:
-            inputs.append({"key": f"#I:{ident}:{field['name']}", "type": field["type"]})
+            inputs.append({"key": f"{spec['namespace']}:{ident}:{field['name']}", "type": field["type"]})
         for cmd in spec["commands"]:
             commands.append({"name": f"um.{ident}.{cmd['name']}"})
         dependencies.update(spec["dependencies"])
