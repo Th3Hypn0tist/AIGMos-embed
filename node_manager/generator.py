@@ -39,6 +39,7 @@ def generate(definition):
     events=regs.get("events",{})
     runners=regs.get("runners",{})
     commands=definition.get("commands",{})
+    # Registry maps are unordered in the canonical composition hash.\n    triggers=dict(sorted(triggers.items()))\n    events=dict(sorted(events.items()))\n    runners=dict(sorted(runners.items()))\n    commands=dict(sorted(commands.items()))
     if set(commands) != {x["name"] for x in m["commands"]} | set(definition.get("application_commands",[])):
         raise ValueError("explicit command handler bindings must match declared commands")
     for registry in (triggers,events,runners):

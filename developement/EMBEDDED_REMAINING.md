@@ -13,7 +13,7 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 - [ ] Hardware-, Modules- ja Pin Mapper -näkymät: lisää/poista/vaihda, pinout, capabilities, reserved/strap, jaetut väylät, osoite- ja pinnikonfliktit, live-testi. (Tekstipohjainen editori, ehdokkaat, pin-taulukko ja versionoitu validointi lisätty; live-testi ja lopullinen Panel avoinna.)
 - [ ] Network-näkymä: DHCP/auto/static, Wi-Fi-konfiguraatio, USB- ja verkkoinventaarion yhdistys, osoitekonfliktit ja saavutettavuus; tunnukset paikallisesti eikä Gitiin. (Network panel, erillinen credential-tiedosto, neighbor cache, ICMP ja OSC-kohde lisätty; testit ja target-integraatio avoinna.)
 - [ ] Säilytä C6:n .50-varaus; ESP8266 .51; auto 50 + node_index. Älä muuta C6:n firmwarea. (Uudet rekisterit varaavat index 0:n C6:lle; vanhojen rekisterien migraatio ja todellinen C6-MAC vahvistamatta.)
-- [ ] State-, Commands-, Trigger-, Event-, Runner- ja Composition-näkymät sekä versioiden valinta/palautus.
+- [ ] State-, Commands-, Trigger-, Event-, Runner- ja Composition-näkymät sekä versioiden valinta/palautus. (Composition Manager -näkymä, JSON-osioeditori, luonnosvalidointi ja historia/palautus lisätty; erilliset rekisterieditorit, runtime-validointi ja testiajo avoinna.)
 - [ ] Build/deployment/monitor-näkymät ja CS-integraatio; estä Push to node kun build ei ole valmis.
 
 ## P1 – ESP8266:n ajettava kompositio

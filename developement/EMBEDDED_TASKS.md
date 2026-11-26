@@ -76,7 +76,7 @@ Module Registry
 - [ ] I²C-sensoritunnistus ja GPIO-tunnistus sallituilla pinneillä.
 - [ ] Hardware inventory. (MAC-tarkistettu JSON-import ja ID-match/candidate-erottelu lisätty; live-probe avoinna.)
 - [ ] Moduulien manuaalinen lisääminen, poistaminen ja vaihtaminen. (Geneerinen hardware editor ja versionoitu tallennus lisätty; testit ajamatta.)
-- [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen. (SHA-256-versiot ja palautus lisätty; testiajo avoinna.)
+- [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen. (SHA-256-versiot, historiavalikko ja palautus lisätty; testiajo avoinna.)
 
 ## 6. Pin Mapper
 - [ ] Piirilevykohtainen visuaalinen pinout. (Tekstipohjainen GPIO/label/capabilities/owner-taulukko lisätty; lopullinen Panel avoinna.)
@@ -162,7 +162,7 @@ DISCONNECTED
 - [ ] Node Manager UserModule. (Geneerinen Manager-palvelukerros ja ensimmäinen erillinen terminal panel lisätty; AIGMos-integraatio avoinna.)
 - [ ] Nodes-, Hardware- ja Module Manager -näkymät. (Node-listaus, USB-inventory ja rekisterien katselu lisätty.)
 - [ ] Pin Mapper ja Network Configuration. (IP-moodin muutos ja komposition JSON-import lisätty; visuaalinen pin mapper avoinna.)
-- [ ] State-, Command- ja TER Configuration.
+- [ ] State-, Command- ja TER Configuration. (Menu 15: johdettu State/Command-näkymä, JSON-osioeditori, TER-luonnoksen rakenteellinen validointi; varsinaiset State- ja TER-editorit sekä runtime-validointi avoinna.)
 - [ ] Composition-, Deployment- ja Monitor-näkymät.
 - [ ] Command Surface -integraatio.
 

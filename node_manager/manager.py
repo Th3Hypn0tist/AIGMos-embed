@@ -102,11 +102,25 @@ class Manager:
         definition.setdefault("osc",{})["port"]=dest["port"]
         return self.configure(mac,definition)
 
+    def composition_view(self,mac):
+        from .composition_editor import view
+        return view(self.hardware_definition(mac))
+
+    def composition_edit(self,mac,section,value):
+        from .composition_editor import edit
+        return self.configure(mac,edit(self.hardware_definition(mac),section,value))
+
+    def history(self,mac):
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return [{"sha256":item["sha256"],"selected":item["sha256"]==node.get("selected"),
+                 "active":item["sha256"]==node.get("active")} for item in node["compositions"]]
+
     def configure(self,mac,definition):
         node=self.registry.data["nodes"][mac_id(mac)]
         if (node["platform"],node["board"])!=(definition["platform"],definition["board"]):
             raise ValueError("composition does not match node")
-        manifest=resolve(definition)
+        from .composition_editor import validate_draft
+        manifest=validate_draft(definition)
         digest=self.registry.store_composition(mac,definition)
         node["selected"]=digest
         self.registry.save()
