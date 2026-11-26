@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.1."""
+"""AirQualityMonitorSystem: read-only PostgreSQL dashboard, v1.0.2."""
 import argparse
 import getpass
 import json
@@ -12,7 +12,7 @@ from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 # (window seconds, bucket seconds); zero means original stored samples.
 RANGES = {'15m': (900, 0), '1h': (3600, 0), '6h': (21600, 30),
           '24h': (86400, 120), '7d': (604800, 600), '30d': (2592000, 3600),
@@ -99,8 +99,9 @@ def history(window, nodes):
         # Fetch newest observations within the chosen time window; keep their raw values.
         cal = conn.execute(f'''SELECT observation_id, observed_at, node_id,
                                       raw_temperature_c, raw_bmp_temperature_c,
-                                      raw_humidity_rh, thermal_camera_c, laser_meter_c
+                                      raw_humidity_rh, laser_meter_c
                                FROM aqm.calibration_observations WHERE {cal_where}
+                               AND laser_meter_c IS NOT NULL
                                ORDER BY observed_at DESC, observation_id DESC LIMIT 101''',
                            params).fetchall()
     return {'start': start, 'end': end, 'bucket_seconds': bucket,
@@ -121,8 +122,8 @@ HTML = r'''<!doctype html>
 <div id="selector" class="selector"></div><p id="history-status" class="muted small">Loading history…</p>
 <section id="charts" class="charts"></section>
 <div class="section"><h2>Calibration observations</h2><span class="muted small" id="cal-count"></span></div>
-<section class="card tablewrap"><table><thead><tr><th>Observed at</th><th>Node</th><th>RH sensor °C</th><th>BMP280 °C</th><th>RH %</th><th>Thermal camera °C</th><th>Laser meter °C</th></tr></thead><tbody id="cal"></tbody></table><p class="chartnote">Manual surface-temperature observations are independent of the original sensor samples. No correction is applied.</p></section>
-<footer>AirQualityMonitorSystem v1.0.1 · Latest sample every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
+<section class="card tablewrap"><table><thead><tr><th>Observed at</th><th>Node</th><th>RH sensor °C</th><th>BMP280 °C</th><th>RH %</th><th>Laser reference °C</th><th>RH sensor − ref °C</th><th>BMP280 − ref °C</th></tr></thead><tbody id="cal"></tbody></table><p class="chartnote">Laser surface temperature is the selected reference. Differences are sensor minus laser reference, using the stored calibration observation. No correction is applied to the original sensor samples.</p></section>
+<footer>AirQualityMonitorSystem v1.0.2 · Latest sample every 5 s · History refresh every 15 s · eCO₂ is a VOC-derived estimate, not measured CO₂.</footer>
 </main><script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -164,7 +165,7 @@ const chartSpecs=[
 const charts=[];
 for(const spec of chartSpecs){const card=el('article','card chart');card.append(el('h3','',spec.title));const legend=el('div','legend'),canvas=el('canvas','plot'),tip=el('div','tip');tip.hidden=true;canvas.setAttribute('aria-label',spec.title+' time series');card.append(legend,canvas,tip);$('charts').append(card);const c={spec,card,legend,canvas,tip,layout:null};charts.push(c);canvas.addEventListener('pointermove',e=>hover(c,e));canvas.addEventListener('pointerleave',()=>{tip.hidden=true});new ResizeObserver(()=>draw(c)).observe(canvas)}
 for(const k of ['15m','1h','6h','24h','7d','30d','90d']){const b=el('button',k===windowKey?'active':'',k);b.dataset.range=k;b.onclick=()=>{windowKey=k;for(const x of $('ranges').children)x.classList.toggle('active',x===b);revision++;requestHistory()};$('ranges').append(b)}
-function linesFor(spec){if(!hist)return[];const groups=new Map();for(const row of hist.samples){if(!groups.has(row.node_id))groups.set(row.node_id,[]);groups.get(row.node_id).push(row)}const out=[];for(const [id,rows] of groups){for(const [key,l,dash] of spec.series){out.push({label:name(id)+' · '+l,color:color(id),dash,points:rows.map(r=>[Date.parse(r.t),r[key]])})}}if(spec.cal){const cg=new Map();for(const r of hist.calibration){if(!cg.has(r.node_id))cg.set(r.node_id,[]);cg.get(r.node_id).push(r)}for(const [id,rows] of cg){for(const [key,l,shape] of [['thermal_camera_c','Thermal camera','circle'],['laser_meter_c','Laser meter','square']]){const points=rows.filter(r=>finite(r[key])).map(r=>[Date.parse(r.observed_at),r[key]]).sort((a,b)=>a[0]-b[0]);if(points.length)out.push({label:name(id)+' · '+l,color:color(id),shape,points})}}}return out}
+function linesFor(spec){if(!hist)return[];const groups=new Map();for(const row of hist.samples){if(!groups.has(row.node_id))groups.set(row.node_id,[]);groups.get(row.node_id).push(row)}const out=[];for(const [id,rows] of groups){for(const [key,l,dash] of spec.series){out.push({label:name(id)+' · '+l,color:color(id),dash,points:rows.map(r=>[Date.parse(r.t),r[key]])})}}if(spec.cal){const cg=new Map();for(const r of hist.calibration){if(!cg.has(r.node_id))cg.set(r.node_id,[]);cg.get(r.node_id).push(r)}for(const [id,rows] of cg){for(const [key,l,shape] of [['laser_meter_c','Laser reference','square']]){const points=rows.filter(r=>finite(r[key])).map(r=>[Date.parse(r.observed_at),r[key]]).sort((a,b)=>a[0]-b[0]);if(points.length)out.push({label:name(id)+' · '+l,color:color(id),shape,points})}}}return out}
 function tickTime(t,span){return new Date(t).toLocaleString('en-GB',span>86400000?{day:'2-digit',month:'short'}:{hour:'2-digit',minute:'2-digit'})}
 function draw(c){const {canvas,spec,legend}=c;const w=canvas.clientWidth,h=canvas.clientHeight;if(w<1||h<1)return;const dpr=window.devicePixelRatio||1;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.font='11px system-ui';ctx.fillStyle='#8c9fb6';const lines=linesFor(spec);legend.replaceChildren();for(const l of lines){const s=el('span');const sw=el('i','swatch'+(l.dash?' dash':l.shape?' dot':''));sw.style.color=l.color;if(l.shape==='square')sw.style.borderRadius='0';s.append(sw,document.createTextNode(l.label));legend.append(s)}
  let lo=Infinity,hi=-Infinity;for(const l of lines)for(const [t,v] of l.points)if(finite(v)){lo=Math.min(lo,v);hi=Math.max(hi,v)}if(!hist||!finite(lo)){ctx.textAlign='center';ctx.fillText('No samples in selected range',w/2,h/2);c.layout=null;return}
@@ -174,7 +175,8 @@ function draw(c){const {canvas,spec,legend}=c;const w=canvas.clientWidth,h=canva
 }
 function nearest(points,t){let a=0,b=points.length;while(a<b){const m=(a+b)>>1;if(points[m][0]<t)a=m+1;else b=m}const p=points[a],q=points[a-1];return !q?p:!p?q:Math.abs(p[0]-t)<Math.abs(q[0]-t)?p:q}
 function hover(c,e){if(!c.layout){c.tip.hidden=true;return}const {start,end,left,right,lines}=c.layout;const r=c.canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<left||x>right){c.tip.hidden=true;return}const t=start+(x-left)/(right-left)*(end-start);const tolerance=Math.max((end-start)/(right-left)*8,(hist.bucket_seconds||5)*1000);const vals=[];for(const l of lines){const p=nearest(l.points,t);if(p&&finite(p[1])&&Math.abs(p[0]-t)<=tolerance)vals.push(`${l.label}: ${fmt(p[1],2)} ${c.spec.unit} (${tickTime(p[0],end-start)})`)}if(!vals.length){c.tip.hidden=true;return}c.tip.textContent=local(t)+'\n'+vals.join('\n');c.tip.hidden=false;const cr=c.card.getBoundingClientRect();c.tip.style.left=Math.max(8,Math.min(e.clientX-cr.left+10,c.card.clientWidth-c.tip.offsetWidth-8))+'px';c.tip.style.top=Math.max(8,e.clientY-cr.top-c.tip.offsetHeight-10)+'px'}
-function renderHistory(){const root=$('cal');root.replaceChildren();for(const r of hist.calibration){const tr=el('tr');for(const v of [local(r.observed_at),name(r.node_id),fmt(r.raw_temperature_c,2),fmt(r.raw_bmp_temperature_c,2),fmt(r.raw_humidity_rh,1),fmt(r.thermal_camera_c,2),fmt(r.laser_meter_c,2)])tr.append(el('td','',v));root.append(tr)}if(!hist.calibration.length){const tr=el('tr'),td=el('td','empty','No calibration observations in selected range');td.colSpan=7;tr.append(td);root.append(tr)}$('cal-count').textContent=hist.calibration_truncated?'Latest 100 observations in range':hist.calibration.length+' observations';const count=hist.samples.reduce((s,r)=>s+r.sample_count,0);$('history-status').textContent=`${count.toLocaleString('en-GB')} stored samples · ${hist.bucket_seconds?'Mean / '+(hist.bucket_seconds<60?hist.bucket_seconds+' s':hist.bucket_seconds/60+' min'):'Raw samples'} · ${local(hist.start)} — ${local(hist.end)}`;for(const c of charts)draw(c)}
+const refDelta=(sensor,reference)=>finite(sensor)&&finite(reference)?sensor-reference:null;
+function renderHistory(){const root=$('cal');root.replaceChildren();for(const r of hist.calibration){const tr=el('tr');for(const v of [local(r.observed_at),name(r.node_id),fmt(r.raw_temperature_c,2),fmt(r.raw_bmp_temperature_c,2),fmt(r.raw_humidity_rh,1),fmt(r.laser_meter_c,2),fmt(refDelta(r.raw_temperature_c,r.laser_meter_c),2),fmt(refDelta(r.raw_bmp_temperature_c,r.laser_meter_c),2)])tr.append(el('td','',v));root.append(tr)}if(!hist.calibration.length){const tr=el('tr'),td=el('td','empty','No laser reference observations in selected range');td.colSpan=8;tr.append(td);root.append(tr)}$('cal-count').textContent=hist.calibration_truncated?'Latest 100 observations in range':hist.calibration.length+' observations';const count=hist.samples.reduce((s,r)=>s+r.sample_count,0);$('history-status').textContent=`${count.toLocaleString('en-GB')} stored samples · ${hist.bucket_seconds?'Mean / '+(hist.bucket_seconds<60?hist.bucket_seconds+' s':hist.bucket_seconds/60+' min'):'Raw samples'} · ${local(hist.start)} — ${local(hist.end)}`;for(const c of charts)draw(c)}
 async function requestHistory(){if(historyBusy){historyPending=true;return}historyBusy=true;const rev=revision;try{if(!selected.size){const end=Date.now(),dur={'15m':900,'1h':3600,'6h':21600,'24h':86400,'7d':604800,'30d':2592000,'90d':7776000}[windowKey];hist={start:new Date(end-dur*1000).toISOString(),end:new Date(end).toISOString(),samples:[],calibration:[],bucket_seconds:0};renderHistory();$('history-status').textContent='Select at least one node.';return}const q=new URLSearchParams({range:windowKey});for(const id of selected)q.append('node',id);const d=await api('/api/history?'+q);if(rev!==revision)return;hist=d;renderHistory();setError('history','')}catch(e){if(rev===revision){setError('history','History unavailable: '+e.message);$('history-status').textContent='History refresh failed · displayed data may be stale.'}}finally{historyBusy=false;if(historyPending){historyPending=false;requestHistory()}}}
 refreshLive().then(()=>{if(!hist&&!historyBusy)requestHistory()});setInterval(refreshLive,5000);setInterval(requestHistory,15000);
 </script></body></html>'''
