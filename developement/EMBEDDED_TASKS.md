@@ -43,7 +43,7 @@ Sensor
 - [ ] ESP8266-adapteri.
 - [ ] ESP32-C6-adapteri.
 - [ ] ESP32-S3-adapterivalmius (ei vielä toteutusvaatimusta).
-- [ ] Alustakohtaiset toolchainit.
+- [ ] Alustakohtaiset toolchainit. (PATH-tunnistus lisätty; SDK-versioiden ja buildin validointi avoinna.)
 - [ ] Piirilevykohtaiset pinout-määritykset, pin capabilities ja rajoitukset. (D1 mini -metadata lisätty, verifioimatta.)
 
 ## 4. Module Registry
@@ -69,7 +69,7 @@ Module Registry
 ```
 
 ## 5. Node Manager
-- [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus. (Passiivinen Linux USB-serial inventory lisätty; MCU/flash-tunnistus avoinna.)
+- [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus. (Passiivinen Linux USB-serial inventory lisätty; Eksplisiittinen esptool 4.x MCU/MAC/flash-tunnistus ja board-valinta lisätty; fyysinen testi avoinna.)
 - [ ] MAC-pohjainen node ID ja pysyvä node registry. (Atominen paikallinen JSON-rekisteri lisätty; testiajo avoinna.)
 - [ ] Alustakohtaisen probe-firmwaren muodostaminen.
 - [ ] Probe-firmwaren flashaus eksplisiittisellä Detect hardware -käskyllä.

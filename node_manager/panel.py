@@ -3,6 +3,7 @@ import json
 import pathlib
 from .manager import Manager
 from .discovery import serial_ports
+from .identify import identify, toolchain
 
 def show(value):
     print(json.dumps(value,indent=2,ensure_ascii=False))
@@ -12,7 +13,7 @@ def run(manager):
         print("\nAIGMos Panel / Node Manager")
         print("1 Nodes  2 USB inventory  3 Register node  4 Network")
         print("5 Configure / import  6 Selected composition  7 Prepare build")
-        print("8 Module registry  9 Board registry  0 Exit")
+        print("8 Module registry  9 Board registry  10 Identify MCU  11 Toolchain  0 Exit")
         try:
             action=input("> ").strip()
             if action=="0": return
@@ -27,6 +28,25 @@ def run(manager):
                 show(manager.configure(mac,definition))
             elif action=="6": show(manager.selected(input("MAC: ")))
             elif action=="7": show(manager.prepare(input("MAC: "),input("Output directory: ")))
+            elif action=="10":
+                ports=serial_ports()
+                for i,port in enumerate(ports,1): print(i,port["port"],port["usb"])
+                if not ports: print("No serial devices"); continue
+                index=int(input("Device number: "))
+                if not 1<=index<=len(ports): raise ValueError("invalid device selection")
+                if input("Identify may reset the selected device. Type IDENTIFY: ")!="IDENTIFY": continue
+                identity=identify(ports[index-1]["port"])
+                show(identity)
+                from .composition import load
+                boards=load("embedded/adapters/registry.json")["platforms"][identity["platform"]]["boards"]
+                for i,board in enumerate(boards,1): print(i,board)
+                if not boards: print("No supported board metadata"); continue
+                selection=input("Board number (blank to skip registration): ").strip()
+                if selection:
+                    index=int(selection)
+                    if not 1<=index<=len(boards): raise ValueError("invalid board selection")
+                    show(manager.register_identified(identity,boards[index-1]))
+            elif action=="11": show(toolchain())
             elif action in ("8","9"):
                 from .composition import load
                 show(load("embedded/modules/registry.json" if action=="8" else "embedded/adapters/registry.json"))

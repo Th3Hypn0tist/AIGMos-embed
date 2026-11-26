@@ -18,6 +18,19 @@ class Manager:
         self.registry.save()
         return node
 
+    def register_identified(self,identity,board):
+        from .registry import mac_id
+        if type(identity["flash_bytes"]) is not int or identity["flash_bytes"]<=0:
+            raise ValueError("invalid flash capacity")
+        mac=mac_id(identity["mac"])
+        platform=identity["platform"]
+        if board not in load("embedded/adapters/registry.json")["platforms"][platform]["boards"]:
+            raise ValueError("board not registered for platform")
+        node=self.registry.register(mac,platform,board)
+        node["hardware"]={"flash_bytes":identity["flash_bytes"],"last_port":identity["port"]}
+        self.registry.save()
+        return node
+
     def network(self,mac,mode,address=None):
         result=self.registry.network(mac,mode,address)
         self.registry.save()

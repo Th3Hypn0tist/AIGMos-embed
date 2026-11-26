@@ -5,9 +5,9 @@ Lähtötilanne: 661fcb3. Ensimmäinen Node Manager -tekstivalikko, runtime-luonn
 ## P0 – Node Managerin provisiointi (aloita tästä)
 - [ ] Aja nykyiset Python- ja C99-host-testit; korjaa havaitut virheet. Älä merkitse hyväksytyksi ilman testitulosta.
 - [ ] Erota LMTS:n TUI-primitiivit yhteiseen AIGMos Paneliin; Node Manager geneerisenä UserModulena.
-- [ ] USB-porttien live-listaus ja laitteen valinta.
-- [ ] MCU-, MAC- ja flash-kokoluokan tunnistus bootloaderin kautta ilman firmwarekirjoitusta; toolchain-tunnistus.
-- [ ] Pysyvä node-identiteetti, laiteinventaario ja valittu vs aktiivinen kompositio.
+- [ ] USB-porttien live-listaus ja laitteen valinta. (Valinta ja uudelleenlistaus Identify-valikossa lisätty; jatkuva päivitys avoinna.)
+- [ ] MCU-, MAC- ja flash-kokoluokan tunnistus bootloaderin kautta ilman firmwarekirjoitusta; toolchain-tunnistus. (Esptool 4.x -rajapinta ja PATH-tunnistus lisätty, mock-testit ja fyysinen testi ajamatta.)
+- [ ] Pysyvä node-identiteetti, laiteinventaario ja valittu vs aktiivinen kompositio. (Tunnistetun MAC:n ja flash-koon tallennus lisätty; aktiivinen versio vasta deployment-verifioinnissa.)
 - [ ] ESP8266:n probe-firmwaren build ja eksplisiittinen Detect hardware; ei automaattista flashausta. Huomioi olemassa oleva firmware ja palautus.
 - [ ] Sallitut I²C-probet ja GPIO-inventaario; epävarmat sensorit merkitään ehdokkaiksi, ei varmoiksi havainnoiksi.
 - [ ] Hardware-, Modules- ja Pin Mapper -näkymät: lisää/poista/vaihda, pinout, capabilities, reserved/strap, jaetut väylät, osoite- ja pinnikonfliktit, live-testi.
