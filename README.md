@@ -41,7 +41,7 @@ target builder and verification adapter exist. See [Node Manager](node_manager/R
 |---|---|
 | Native State, CS, TER, routines | Initial implementation; semantics/integration incomplete |
 | Node Manager configuration | Initial interactive implementation |
-| Probe | Tables and inventory import; target execution pending |
+| Probe | Tables, ESP8266 entry point, local CLI build path and inventory import; compilation and flash unverified |
 | ESP8266 | Optional external adapter source; SDK build and Wi-Fi setup pending |
 | ESP32-C6 | Existing production firmware preserved; migration pending |
 | Composition/build | C tables and host objects; target firmware pending |

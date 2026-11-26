@@ -36,6 +36,11 @@ class Manager:
         node=self.registry.data["nodes"][mac_id(mac)]
         return prepare(node["platform"],node["board"],output)
 
+    def build_probe(self,mac,output):
+        from .probe_builder import build
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return build(node["platform"],node["board"],output)
+
     def import_probe(self,mac,observations):
         from .probe import plan,interpret
         node=self.registry.data["nodes"][mac_id(mac)]

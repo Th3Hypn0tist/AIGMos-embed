@@ -26,3 +26,5 @@ Menu 16 prepares a build plan, compiles selected runtime and module sources into
 The optional ESP8266 adapter source is in embedded/adapters/esp8266; target build and network provisioning remain pending.
 
 Local Arduino CLI/Core provisioning baseline: see [toolchains](../toolchains/README.md). Existing esptool identification still uses PATH; migration to the packaged toolchain is pending.
+
+Menu 17 stages and compiles the standalone ESP8266 probe using the local locked Arduino CLI/Core into a new build directory. The probe emits repeated AIGPROBE JSON reports at 115200 baud; GPIO observations are input levels only, not sensor identification. No upload is performed. Target compilation, serial capture and safe backup/restore are outstanding.
