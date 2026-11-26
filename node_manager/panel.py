@@ -22,8 +22,8 @@ def run(manager):
             elif action=="2": show(serial_ports())
             elif action=="3": show(manager.register(input("MAC: "),input("Platform: "),input("Board path: ")))
             elif action=="4":
-                mac=input("MAC: ");mode=input("Mode (auto/static/dhcp): ")
-                show(manager.network(mac,mode,input("IPv4: ") if mode=="static" else None))
+                from .network_panel import run as network_run
+                network_run(manager,input("MAC: "),show)
             elif action=="5":
                 mac=input("MAC: ");definition=json.loads(pathlib.Path(input("Composition JSON: ")).read_text())
                 show(manager.configure(mac,definition))

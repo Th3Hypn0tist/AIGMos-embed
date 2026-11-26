@@ -94,9 +94,9 @@ Module Registry
 - [ ] MAC-pohjainen IP-rekisteri. (Paikallinen toteutus lisätty.)
 - [ ] Automaattinen IP-allokointi 50 + node_index (nollapohjainen; 192.168.0.50, .51, ...). (Toteutus lisätty, testiajo avoinna.)
 - [ ] Osoitekonfliktien tarkistus ja aiempien varausten säilyttäminen. (Rekisterin sisäinen ja annetun inventaarion tarkistus lisätty; aktiivinen verkkohaku avoinna.)
-- [ ] DHCP, static IP, manuaalinen IP ja Wi-Fi-konfiguraatio.
-- [ ] OSC destination ja UDP 9000.
-- [ ] Verkkoyhteyden validointi.
+- [ ] DHCP, static IP, manuaalinen IP ja Wi-Fi-konfiguraatio. (Network panel ja erillinen paikallinen credential-tiedosto lisätty; firmware-integraatio avoinna.)
+- [ ] OSC destination ja UDP 9000. (Versionoitu master/port-editori lisätty; runtime avoinna.)
+- [ ] Verkkoyhteyden validointi. (Linux neighbor cache ja eksplisiittinen ICMP-testi lisätty; OSC-verifiointi avoinna.)
 
 ## 8. Composition Engine
 - [ ] Kohdealustan, HardCore- ja Core-ominaisuuksien valinta. (Platform/board ja HardCore feature resolver lisätty; Core-valinta lisätty build plan -tasolla.)

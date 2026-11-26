@@ -17,3 +17,5 @@ and final AIGMos Panel integration are outstanding. The AQM pending_ter
 field documents intended commands; it is not executable yet.
 
 Menu 14 edits a node's hardware composition. It displays GPIO ownership, reserved and strap pins, module requirements and imported probe candidates. Each successful edit creates/selects a validated composition version; it never changes active firmware. Probe candidates are not selected automatically. Live hardware tests are not yet available.
+
+Menu 4 provides network configuration. Linux neighbor cache is advisory, not a complete conflict scan; ping does not validate OSC. Wi-Fi credentials are stored separately in a local private file (plaintext, mode 0600), not in the composition or registry. Keep the registry outside Git. ESP8266 allocation starts at index 1 (.51); index 0/.50 is reserved for legacy C6. Existing registry indices are not migrated automatically. Target Wi-Fi and OSC integration remain pending.

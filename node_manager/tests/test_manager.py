@@ -16,7 +16,7 @@ class ManagerTest(unittest.TestCase):
             manager.network(mac,"auto")
             manager.configure(mac,d)
             self.assertEqual(Manager(path).selected(mac),d)
-            self.assertEqual(Manager(path).nodes()[0]["network"]["address"],"192.168.0.50")
+            self.assertEqual(Manager(path).nodes()[0]["network"]["address"],"192.168.0.51")
     def test_serial_inventory(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)

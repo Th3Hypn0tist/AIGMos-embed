@@ -39,7 +39,9 @@ class Registry:
             if (node["platform"], node["board"]) != (platform, board):
                 raise ValueError("identity already bound to another platform/board")
             return node
-        index = max((n["index"] for n in nodes.values()), default=-1) + 1
+        index = max((n["index"] for n in nodes.values()), default=0) + 1
+        if platform=="ESP32-C6" and not any(n["index"]==0 for n in nodes.values()):
+            index=0
         node = {"id": key, "index": index, "platform": platform, "board": board,
                 "network": {"mode": "dhcp"}, "compositions": [], "active": None}
         nodes[key] = node
@@ -49,6 +51,10 @@ class Registry:
         node = self.data["nodes"][mac_id(mac)]
         others = {n["network"].get("address") for n in self.data["nodes"].values() if n is not node}
         others.update(str(ipaddress.IPv4Address(a)) for a in occupied)
+        # Existing production C6 reservation is released only to its registered owner.
+        if node["platform"] != "ESP32-C6" or node["index"] != 0:
+            others.add("192.168.0.50")
+        others.add("192.168.0.18")
         if mode == "dhcp":
             if address is not None:
                 raise ValueError("DHCP cannot have a static address")

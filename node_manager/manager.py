@@ -63,10 +63,44 @@ class Manager:
         return {"modules":d["modules"],"buses":d["buses"],"pins":pinout(d),
                 "candidates":inventory_candidates(node)}
 
-    def network(self,mac,mode,address=None):
-        result=self.registry.network(mac,mode,address)
+    def network(self,mac,mode,address=None,observations=()):
+        from .network import occupied
+        result=self.registry.network(mac,mode,address,occupied(observations,mac))
         self.registry.save()
         return result
+
+    def network_view(self,mac,observations=()):
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return {"network":node["network"],"hardware":node.get("hardware",{}),
+                "neighbors":[row for row in observations if row["mac"]==node["id"]],
+                "wifi_configured":self._wifi_path(mac).exists()}
+
+    def _wifi_path(self,mac):
+        return self.registry.path.parent/"wifi"/(mac_id(mac)+".json")
+
+    def set_wifi(self,mac,ssid,password):
+        import json,os,tempfile
+        from .network import wifi
+        self.registry.data["nodes"][mac_id(mac)]
+        data=wifi(ssid,password)
+        path=self._wifi_path(mac)
+        path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
+        fd,tmp=tempfile.mkstemp(dir=path.parent)
+        try:
+            with os.fdopen(fd,"w") as stream:
+                json.dump(data,stream)
+            os.replace(tmp,path)
+        finally:
+            if os.path.exists(tmp): os.unlink(tmp)
+        return {"ssid":ssid,"configured":True}
+
+    def set_endpoint(self,mac,address,port):
+        from .network import endpoint
+        dest=endpoint(address,port)
+        definition=self.hardware_definition(mac)
+        definition.setdefault("variables",{})["master"]=dest["address"]
+        definition.setdefault("osc",{})["port"]=dest["port"]
+        return self.configure(mac,definition)
 
     def configure(self,mac,definition):
         node=self.registry.data["nodes"][mac_id(mac)]
