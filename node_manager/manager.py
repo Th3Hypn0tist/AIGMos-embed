@@ -46,6 +46,23 @@ class Manager:
         self.registry.save()
         return inventory
 
+    def hardware_definition(self,mac):
+        from .hardware import blank
+        node=self.registry.data["nodes"][mac_id(mac)]
+        return self.selected(mac) if node.get("selected") else blank(node)
+
+    def hardware_edit(self,mac,action,**fields):
+        from .hardware import edit
+        definition=edit(self.hardware_definition(mac),action,**fields)
+        return self.configure(mac,definition)
+
+    def hardware_view(self,mac):
+        from .hardware import pinout,inventory_candidates
+        node=self.registry.data["nodes"][mac_id(mac)]
+        d=self.hardware_definition(mac)
+        return {"modules":d["modules"],"buses":d["buses"],"pins":pinout(d),
+                "candidates":inventory_candidates(node)}
+
     def network(self,mac,mode,address=None):
         result=self.registry.network(mac,mode,address)
         self.registry.save()

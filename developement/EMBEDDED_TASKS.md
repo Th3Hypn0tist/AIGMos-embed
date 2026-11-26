@@ -75,13 +75,13 @@ Module Registry
 - [ ] Probe-firmwaren flashaus eksplisiittisellä Detect hardware -käskyllä.
 - [ ] I²C-sensoritunnistus ja GPIO-tunnistus sallituilla pinneillä.
 - [ ] Hardware inventory. (MAC-tarkistettu JSON-import ja ID-match/candidate-erottelu lisätty; live-probe avoinna.)
-- [ ] Moduulien manuaalinen lisääminen, poistaminen ja vaihtaminen.
+- [ ] Moduulien manuaalinen lisääminen, poistaminen ja vaihtaminen. (Geneerinen hardware editor ja versionoitu tallennus lisätty; testit ajamatta.)
 - [ ] Nodekohtaisten kompositioiden tallentaminen ja palauttaminen. (SHA-256-versiot ja palautus lisätty; testiajo avoinna.)
 
 ## 6. Pin Mapper
-- [ ] Piirilevykohtainen visuaalinen pinout.
+- [ ] Piirilevykohtainen visuaalinen pinout. (Tekstipohjainen GPIO/label/capabilities/owner-taulukko lisätty; lopullinen Panel avoinna.)
 - [ ] Moduulien liityntävaatimusten automaattinen esittäminen.
-- [ ] Interaktiivinen pinnien bindaus ja capabilities-suodatus.
+- [ ] Interaktiivinen pinnien bindaus ja capabilities-suodatus. (Menu 14: bus, add/remove/replace/rebind, vapaat pinnit ja konfliktivalidointi; testit ajamatta.)
 - [ ] Varattujen pinnien ja boot-strapping-rajoitusten tunnistus.
 - [ ] Pin conflict detection. (Python-validaattori ja testit lisätty; ajamatta.)
 - [ ] Jaetut väylät ja I²C-osoitekonfliktit. (Validaattori lisätty; testit ajamatta.)

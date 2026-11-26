@@ -14,7 +14,7 @@ def run(manager):
         print("1 Nodes  2 USB inventory  3 Register node  4 Network")
         print("5 Configure / import  6 Selected composition  7 Prepare build")
         print("8 Module registry  9 Board registry  10 Identify MCU  11 Toolchain  0 Exit")
-        print("12 Prepare probe  13 Import probe observations")
+        print("12 Prepare probe  13 Import probe observations  14 Hardware / Pin Mapper")
         try:
             action=input("> ").strip()
             if action=="0": return
@@ -52,6 +52,9 @@ def run(manager):
             elif action=="13":
                 mac=input("MAC: ");data=json.loads(pathlib.Path(input("Probe JSON: ")).read_text())
                 show(manager.import_probe(mac,data))
+            elif action=="14":
+                from .hardware_panel import run as hardware_run
+                hardware_run(manager,input("MAC: "),show)
             elif action in ("8","9"):
                 from .composition import load
                 show(load("embedded/modules/registry.json" if action=="8" else "embedded/adapters/registry.json"))

@@ -15,3 +15,5 @@ Prepare build is not Push to node. No firmware is flashed and no active
 composition is set. Hardware probe, target build, interactive pin editor
 and final AIGMos Panel integration are outstanding. The AQM pending_ter
 field documents intended commands; it is not executable yet.
+
+Menu 14 edits a node's hardware composition. It displays GPIO ownership, reserved and strap pins, module requirements and imported probe candidates. Each successful edit creates/selects a validated composition version; it never changes active firmware. Probe candidates are not selected automatically. Live hardware tests are not yet available.
