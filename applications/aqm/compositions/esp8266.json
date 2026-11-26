@@ -32,5 +32,39 @@
     "ter",
     "routine"
   ],
-  "flags": []
+  "flags": [],
+  "variables": {
+    "master": "192.168.0.18"
+  },
+  "osc": {
+    "port": 9000
+  },
+  "pending_ter": {
+    "triggers": {
+      "sample_timer": {
+        "condition": {
+          "interval_ms": 5000
+        },
+        "state": 0
+      }
+    },
+    "events": {
+      "sample_event": {
+        "trigger": "sample_timer",
+        "commands": [
+          "run aqm_sample"
+        ]
+      }
+    },
+    "runners": {
+      "aqm_sample": {
+        "state": 0,
+        "commands": [
+          "um.bmp.read",
+          "um.dht.read",
+          "osc.out $master #I:sensorit:data"
+        ]
+      }
+    }
+  }
 }

@@ -67,7 +67,7 @@ Module Registry
 ```
 
 ## 5. Node Manager
-- [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus.
+- [ ] Automaattinen USB-, MCU- ja flash-muistitunnistus. (Passiivinen Linux USB-serial inventory lisätty; MCU/flash-tunnistus avoinna.)
 - [ ] MAC-pohjainen node ID ja pysyvä node registry. (Atominen paikallinen JSON-rekisteri lisätty; testiajo avoinna.)
 - [ ] Alustakohtaisen probe-firmwaren muodostaminen.
 - [ ] Probe-firmwaren flashaus eksplisiittisellä Detect hardware -käskyllä.
@@ -157,9 +157,9 @@ DISCONNECTED
 ## 10. AIGMos Panel / TUI
 - [x] LMTS:n TUI-rakenteen alustava tarkastus.
 - [ ] Yhteisten TUI-primitiivien erottelu ja AIGMos Panel.
-- [ ] Node Manager UserModule.
-- [ ] Nodes-, Hardware- ja Module Manager -näkymät.
-- [ ] Pin Mapper ja Network Configuration.
+- [ ] Node Manager UserModule. (Geneerinen Manager-palvelukerros ja ensimmäinen erillinen terminal panel lisätty; AIGMos-integraatio avoinna.)
+- [ ] Nodes-, Hardware- ja Module Manager -näkymät. (Node-listaus, USB-inventory ja rekisterien katselu lisätty.)
+- [ ] Pin Mapper ja Network Configuration. (IP-moodin muutos ja komposition JSON-import lisätty; visuaalinen pin mapper avoinna.)
 - [ ] State-, Command- ja TER Configuration.
 - [ ] Composition-, Deployment- ja Monitor-näkymät.
 - [ ] Command Surface -integraatio.
@@ -172,9 +172,9 @@ DISCONNECTED
 - [ ] OSC-moduulin ja nykyisten sensorimoduulien sovittaminen AIGMos Embedded -rakenteeseen. (BMP180 ja DHT11 natiivit C99-ajurit sekä #I-kirjoitus lisätty; adapteri, OSC ja testiajo avoinna.)
 - [ ] AQM-kompositiomääritys. (ESP8266 BMP180+DHT11 -luonnos lisätty; OSC ja TER vielä avoinna.)
 - [ ] Mittausten kirjoittaminen Stateen #I-rakenteella. (BMP180/DHT11 sample-rajapinnat lisätty, virheessä NULL; integraatiotestaus avoinna.)
-- [ ] TER-pohjainen mittaus- ja lähetysrutiini, 5 s.
+- [ ] TER-pohjainen mittaus ja lähetys: ajastettu Trigger 5000 ms → Event (run aqm_sample) → Runner (um.bmp.read, um.dht.read, osc.out $master #I:sensorit:data). Kompositiossa pending_ter, ei vielä ajettava. $master=192.168.0.18, UDP 9000.
 - [ ] Kalibrointitoiminnallisuus.
-- [ ] Expose-yhteensopiva Python OSC IN → #OSC → AQM DB-käsittely; verifioi 1.9 Expose -sopimus.
+- [ ] System Expose -yhteensopiva Python OSC IN → #OSC → AQM DB-käsittely; verifioi 1.9 Expose -sopimus.
 - [ ] Säilytä lasermittaus, kalibrointi, mittausdata, DB-funktiot ja dashboard; vain node→backend-protokolla muuttuu.
 - [ ] Backendin integraatiotestaus.
 - [ ] Nykyisen dashboardin yhteensopivuuden verifiointi.
@@ -193,7 +193,7 @@ DISCONNECTED
 
 ## 13. Dokumentointi
 - [ ] Asennustyökalu, toolchainien ja UserModule-riippuvuuksien asennus.
-- [ ] Node Managerin käyttöohje.
+- [ ] Node Managerin käyttöohje. (Ensimmäisen terminal panelin käynnistys ja rajaukset dokumentoitu.)
 - [ ] Uuden alustan, moduulin ja komposition lisääminen.
 - [ ] Toteutuneen arkkitehtuurin dokumentointi.
 - [ ] PROTOCOL.md:n päivittäminen vain toteutuneen toiminnallisuuden perusteella.

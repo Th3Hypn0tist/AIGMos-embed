@@ -55,6 +55,9 @@ def resolve(definition):
                 "application_commands": definition.get("application_commands", []),
                 "command_bindings": definition.get("commands", {}),
                 "ter": definition.get("ter", {}),
+                "variables": definition.get("variables", {}),
+                "osc": definition.get("osc", {}),
+                "pending_ter": definition.get("pending_ter", {}),
                 "runtime_dependencies": [], "external_dependencies": sorted(dependencies),
                 "build_ready": False}
     raw = json.dumps(manifest, sort_keys=True, separators=(",", ":"), allow_nan=False)
